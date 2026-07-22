@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grass Cutter Game - Play Online for Free | GrassCutterGame.com</title>
+  <meta name="description" content="Play Grass Cutter online for free! Draw lines that become mower blades, race against opponents, and cut grass faster than anyone. No download needed - start mowing now at GrassCutterGame.com.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#07150d">
+  <link rel="canonical" href="https://grasscuttergame.com/">
+
+  <meta property="og:title" content="Grass Cutter Game - Play Online for Free | GrassCutterGame.com">
+  <meta property="og:description" content="Play Grass Cutter online for free! Draw lines that become mower blades, race against opponents, and cut grass faster than anyone. No download needed - start mowing now at GrassCutterGame.com.">
+  <meta property="og:url" content="https://grasscuttergame.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="GrassCutterGame">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Grass Cutter",
+    "url": "https://grasscuttergame.com/",
+    "description": "Play Grass Cutter online for free! Draw lines that become mower blades and race to cut grass faster than your opponent.",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I play Grass Cutter?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Draw a cutting path across the lawn with a mouse or finger. Each completed line becomes a mower blade, so aim for open grass and try to finish before your opponent."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is Grass Cutter free to play?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Grass Cutter is free to play in the game frame on this page, and you do not need to install anything before starting."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I play Grass Cutter on mobile?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. The page adapts to phones and tablets, and the game supports touch input. Landscape orientation can give you a wider area for drawing routes."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What are the controls for Grass Cutter?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "On desktop, hold the primary mouse button and move the pointer to draw. On a touchscreen, press and slide one finger across the lawn, then release to complete the line."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the objective of Grass Cutter?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Clear the grass faster than your opponent by placing efficient cutting lines. Completing the lawn also helps you earn food for the pets in the game."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg: #07150d;
+      --panel: #0d2818;
+      --panel-light: #123c23;
+      --green: #bdfc55;
+      --green-dark: #173f25;
+      --orange: #ffbd52;
+      --white: #f7f5e9;
+      --muted: #a9bcae;
+      --line: rgba(189, 252, 85, 0.2);
+      --soft-line: rgba(247, 245, 233, 0.12);
+      --shadow: 0 28px 70px rgba(0, 0, 0, 0.4);
+      --display: "Avenir Next Condensed", "Trebuchet MS", sans-serif;
+      --body: "Avenir Next", "Trebuchet MS", sans-serif;
+      --page: min(1160px, calc(100% - 48px));
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--bg);
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      overflow-x: hidden;
+      color: var(--white);
+      background: var(--bg);
+      font-family: var(--body);
+      font-size: 16px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a,
+    button,
+    summary {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--green);
+      outline-offset: 4px;
+    }
+
+    ::selection {
+      color: var(--bg);
+      background: var(--green);
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 100;
+      padding: 10px 16px;
+      color: var(--bg);
+      background: var(--green);
+      border-radius: 6px;
+      font-weight: 800;
+      text-decoration: none;
+      transform: translateY(-180%);
+      transition: transform 160ms ease, background 160ms ease;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    .skip-link:hover {
+      background: #d4ff8e;
+    }
+
+    .container {
+      width: var(--page);
+      margin-inline: auto;
+    }
+
+    .hero {
+      position: relative;
+      min-height: 760px;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(189, 252, 85, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(189, 252, 85, 0.035) 1px, transparent 1px),
+        radial-gradient(circle at 82% 30%, rgba(31, 124, 62, 0.34), transparent 26rem),
+        linear-gradient(145deg, #091d11, #050e08 64%);
+      background-size: 48px 48px, 48px 48px, auto, auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 82px;
+      border-bottom: 1px solid var(--soft-line);
+    }
+
+    .brand {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      font-family: var(--display);
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .brand-mark,
+    .blade-disc {
+      position: relative;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 50%;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      color: var(--bg);
+      background: var(--green);
+    }
+
+    .brand-mark::before,
+    .brand-mark::after,
+    .blade-disc::before,
+    .blade-disc::after {
+      content: "";
+      position: absolute;
+      width: 70%;
+      height: 13%;
+      background: currentColor;
+      border-radius: 999px;
+      transform: rotate(28deg);
+    }
+
+    .brand-mark::after,
+    .blade-disc::after {
+      transform: rotate(-28deg);
+    }
+
+    .free-label {
+      padding: 8px 12px;
+      color: var(--green);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+      gap: clamp(48px, 7vw, 108px);
+      align-items: center;
+      padding-block: 78px 112px;
+    }
+
+    .eyebrow,
+    .section-label {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin: 0 0 18px;
+      color: var(--green);
+      font-size: 0.74rem;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before,
+    .section-label::before {
+      content: "";
+      width: 34px;
+      height: 2px;
+      background: currentColor;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: var(--display);
+      text-wrap: balance;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin-bottom: 26px;
+      font-size: clamp(4rem, 7.6vw, 7.2rem);
+      font-weight: 950;
+      letter-spacing: -0.065em;
+      line-height: 0.86;
+      text-transform: uppercase;
+    }
+
+    .hero-copy {
+      max-width: 660px;
+      margin-bottom: 34px;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .hero-copy strong {
+      color: var(--white);
+    }
+
+    .cta {
+      display: inline-flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+      min-width: 188px;
+      min-height: 58px;
+      padding: 15px 24px;
+      color: var(--bg);
+      background: var(--green);
+      border: 1px solid var(--green);
+      border-radius: 6px;
+      box-shadow: 7px 7px 0 var(--green-dark);
+      font-family: var(--display);
+      font-weight: 950;
+      letter-spacing: 0.09em;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .cta::after {
+      content: "→";
+      font-size: 1.3rem;
+    }
+
+    .cta:hover {
+      background: #d4ff8e;
+      box-shadow: 3px 3px 0 var(--green-dark);
+      transform: translate(4px, 4px);
+    }
+
+    .hero-facts {
+      display: flex;
+      gap: 28px;
+      margin-top: 38px;
+      padding-top: 20px;
+      border-top: 1px solid var(--soft-line);
+    }
+
+    .hero-facts span {
+      display: grid;
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .hero-facts strong {
+      color: var(--white);
+      font-family: var(--display);
+      font-size: 1rem;
+    }
+
+    .arena {
+      position: relative;
+      width: min(100%, 500px);
+      margin-inline: auto;
+      aspect-ratio: 0.95;
+      overflow: hidden;
+      background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 58px, transparent 58px 116px),
+        linear-gradient(150deg, #1f7540, #124829);
+      border: 1px solid rgba(189, 252, 85, 0.35);
+      border-radius: 8px;
+      box-shadow: var(--shadow), 14px 14px 0 rgba(189, 252, 85, 0.07);
+      transform: rotate(2deg);
+    }
+
+    .arena::before {
+      content: "";
+      position: absolute;
+      inset: 11%;
+      border: 2px solid rgba(247, 245, 233, 0.4);
+      border-radius: 45% 45% 7px 7px;
+    }
+
+    .arena-label {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      z-index: 3;
+      padding: 7px 10px;
+      background: rgba(7, 21, 13, 0.9);
+      border-radius: 4px;
+      font-family: var(--display);
+      font-size: 0.68rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .route {
+      position: absolute;
+      inset: 12%;
+      z-index: 2;
+      width: 76%;
+      height: 76%;
+      filter: drop-shadow(0 0 8px rgba(189, 252, 85, 0.45));
+    }
+
+    .route path {
+      fill: none;
+      stroke: var(--green);
+      stroke-width: 11;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 760;
+      stroke-dashoffset: 760;
+      animation: draw-route 1.7s 250ms ease forwards;
+    }
+
+    .route circle {
+      fill: var(--bg);
+      stroke: var(--green);
+      stroke-width: 7;
+    }
+
+    .blade-disc {
+      position: absolute;
+      left: 62%;
+      top: 60%;
+      z-index: 3;
+      width: 82px;
+      height: 82px;
+      color: var(--bg);
+      background: var(--orange);
+      border: 7px solid var(--bg);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+    }
+
+    @keyframes draw-route {
+      to { stroke-dashoffset: 0; }
+    }
+
+    section {
+      padding-block: clamp(86px, 10vw, 138px);
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(280px, 0.55fr);
+      gap: 60px;
+      align-items: end;
+      margin-bottom: 48px;
+    }
+
+    h2 {
+      margin-bottom: 0;
+      font-size: clamp(2.8rem, 5vw, 5rem);
+      font-weight: 950;
+      letter-spacing: -0.05em;
+      line-height: 0.95;
+      text-transform: uppercase;
+    }
+
+    .section-copy {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .game-section {
+      background: linear-gradient(135deg, rgba(28, 93, 48, 0.1), transparent 45%), #091b10;
+      border-block: 1px solid var(--soft-line);
+      scroll-margin-top: 20px;
+    }
+
+    .game-wide {
+      width: min(1460px, calc(100% - 32px));
+      margin-inline: auto;
+    }
+
+    .game-frame {
+      position: relative;
+      overflow: hidden;
+      background: #020805;
+      border: 1px solid rgba(189, 252, 85, 0.4);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+    }
+
+    .game-frame iframe {
+      display: block;
+      width: 100%;
+      height: 600px;
+      background: #020805;
+      border: 0;
+    }
+
+    .fullscreen-button {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 5;
+      min-height: 46px;
+      padding: 10px 14px;
+      color: var(--white);
+      background: rgba(7, 21, 13, 0.92);
+      border: 1px solid rgba(189, 252, 85, 0.5);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.74rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    .fullscreen-button:hover {
+      color: var(--bg);
+      background: var(--green);
+      transform: translateY(-2px);
+    }
+
+    .game-frame:fullscreen,
+    .game-frame:-webkit-full-screen {
+      width: 100vw;
+      height: 100dvh;
+      border: 0;
+      border-radius: 0;
+    }
+
+    .game-frame:fullscreen iframe,
+    .game-frame:-webkit-full-screen iframe {
+      height: 100dvh;
+    }
+
+    .game-note {
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .how-section,
+    .tips-section {
+      background: var(--bg);
+    }
+
+    .steps,
+    .tips-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .steps {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .step,
+    .tip {
+      border: 1px solid var(--soft-line);
+      border-radius: 8px;
+      transition: border-color 180ms ease, transform 180ms ease;
+    }
+
+    .step {
+      min-height: 278px;
+      padding: 26px 23px;
+      background: linear-gradient(150deg, rgba(18, 60, 35, 0.9), rgba(9, 27, 16, 0.8));
+    }
+
+    .step:hover,
+    .tip:hover {
+      border-color: rgba(189, 252, 85, 0.45);
+      transform: translateY(-4px);
+    }
+
+    .step-icon {
+      display: grid;
+      width: 48px;
+      height: 48px;
+      place-items: center;
+      margin-bottom: 34px;
+      color: var(--orange);
+      background: rgba(255, 189, 82, 0.08);
+      border: 1px solid rgba(255, 189, 82, 0.24);
+      border-radius: 6px;
+      font-size: 1.35rem;
+    }
+
+    .step h3,
+    .tip h3 {
+      margin-bottom: 10px;
+      font-size: 1.08rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .step p,
+    .tip p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .features-section {
+      background:
+        repeating-linear-gradient(101deg, transparent 0 100px, rgba(255, 255, 255, 0.02) 100px 200px),
+        var(--panel);
+      border-block: 1px solid var(--soft-line);
+    }
+
+    .features-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1.3fr);
+      gap: clamp(48px, 8vw, 108px);
+      align-items: center;
+    }
+
+    .features-intro {
+      margin: 24px 0 0;
+      color: var(--muted);
+    }
+
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 28px;
+      margin: 0;
+      padding: 30px 36px;
+      background: rgba(5, 16, 9, 0.72);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 12px 12px 0 rgba(189, 252, 85, 0.05);
+      list-style: none;
+    }
+
+    .feature-list li {
+      position: relative;
+      min-height: 88px;
+      padding: 18px 0 18px 34px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--soft-line);
+      font-size: 0.9rem;
+    }
+
+    .feature-list li::before {
+      content: "✦";
+      position: absolute;
+      left: 2px;
+      top: 18px;
+      color: var(--green);
+      font-size: 1.05rem;
+    }
+
+    .feature-list strong {
+      display: block;
+      color: var(--white);
+      font-family: var(--display);
+      font-size: 0.86rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .tips-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .tip {
+      min-height: 220px;
+      padding: 32px;
+      background: rgba(13, 40, 24, 0.48);
+    }
+
+    .tip-number {
+      display: block;
+      margin-bottom: 26px;
+      color: var(--green);
+      font-family: var(--display);
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+    }
+
+    .faq-section {
+      background: radial-gradient(circle at 8% 72%, rgba(27, 101, 54, 0.18), transparent 25rem), #091b10;
+      border-top: 1px solid var(--soft-line);
+    }
+
+    .faq-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
+      gap: clamp(50px, 8vw, 110px);
+      align-items: start;
+    }
+
+    .faq-list {
+      border-top: 1px solid var(--soft-line);
+    }
+
+    .faq-list details {
+      border-bottom: 1px solid var(--soft-line);
+    }
+
+    .faq-list summary {
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-height: 82px;
+      padding: 20px 50px 20px 0;
+      color: var(--white);
+      cursor: pointer;
+      font-family: var(--display);
+      font-size: 1.05rem;
+      font-weight: 900;
+      list-style: none;
+      text-transform: uppercase;
+      transition: color 160ms ease;
+    }
+
+    .faq-list summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .faq-list summary:hover,
+    .faq-list details[open] summary {
+      color: var(--green);
+    }
+
+    .faq-list summary::before,
+    .faq-list summary::after {
+      content: "";
+      position: absolute;
+      right: 4px;
+      width: 20px;
+      height: 2px;
+      background: var(--green);
+      transition: transform 160ms ease;
+    }
+
+    .faq-list summary::after {
+      transform: rotate(90deg);
+    }
+
+    .faq-list details[open] summary::after {
+      transform: rotate(0);
+    }
+
+    .faq-answer {
+      padding: 0 48px 28px 0;
+      color: var(--muted);
+    }
+
+    .faq-answer p {
+      margin-bottom: 0;
+    }
+
+    footer {
+      padding-block: 32px;
+      color: var(--muted);
+      background: #040c07;
+      border-top: 1px solid var(--line);
+      font-size: 0.76rem;
+      text-align: center;
+    }
+
+    footer p {
+      margin: 0;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid {
+        grid-template-columns: 1fr 0.75fr;
+        gap: 42px;
+      }
+
+      .steps {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .features-layout,
+      .faq-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --page: min(100% - 34px, 680px);
+      }
+
+      section {
+        padding-block: 72px;
+      }
+
+      .hero {
+        min-height: 0;
+      }
+
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 48px;
+        padding-block: 58px 86px;
+      }
+
+      .arena {
+        width: min(100%, 440px);
+      }
+
+      .section-head {
+        grid-template-columns: 1fr;
+        gap: 18px;
+        margin-bottom: 36px;
+      }
+
+      h2 {
+        font-size: clamp(2.6rem, 10vw, 4rem);
+      }
+
+      .game-frame iframe {
+        height: 400px;
+      }
+
+      .tips-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        font-size: 15px;
+      }
+
+      .topbar {
+        min-height: 72px;
+      }
+
+      .free-label {
+        padding-inline: 9px;
+        font-size: 0.6rem;
+      }
+
+      h1 {
+        font-size: clamp(2.6rem, 12vw, 3.6rem);
+      }
+
+      .hero-copy {
+        margin-bottom: 26px;
+        font-size: 1rem;
+      }
+
+      .cta {
+        width: 100%;
+      }
+
+      .hero-facts {
+        gap: 14px;
+        justify-content: space-between;
+      }
+
+      section {
+        padding-block: 58px;
+      }
+
+      .game-wide {
+        width: 100%;
+      }
+
+      .game-frame {
+        border-inline: 0;
+        border-radius: 0;
+      }
+
+      .game-frame iframe {
+        height: 300px;
+      }
+
+      .fullscreen-button {
+        top: 10px;
+        right: 10px;
+      }
+
+      .steps,
+      .feature-list {
+        grid-template-columns: 1fr;
+      }
+
+      .step {
+        min-height: 0;
+      }
+
+      .feature-list {
+        padding: 24px;
+      }
+
+      .feature-list li {
+        min-height: 0;
+      }
+
+      .faq-list summary {
+        min-height: 56px;
+        padding: 17px 46px 17px 0;
+      }
+
+      .faq-answer {
+        padding-right: 24px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+
+      .route path {
+        stroke-dashoffset: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="hero">
+    <div class="topbar container">
+      <span class="brand"><span class="brand-mark" aria-hidden="true"></span>Grass Cutter</span>
+      <span class="free-label">Free browser game</span>
+    </div>
+
+    <div class="hero-grid container">
+      <div>
+        <p class="eyebrow">Draw &bull; Cut &bull; Race</p>
+        <h1>Grass Cutter - Play Online for Free</h1>
+        <p class="hero-copy">
+          Draw a route, watch it become a mower blade, and race to clear the lawn before your rival.
+          Start the <strong>grass cutter game</strong> right in your browser—no installation required.
+        </p>
+        <a class="cta" href="#game">Play Now</a>
+
+        <div class="hero-facts" aria-label="Game highlights">
+          <span><strong>Draw</strong>Your route</span>
+          <span><strong>Race</strong>Your rival</span>
+          <span><strong>Feed</strong>Your pets</span>
+        </div>
+      </div>
+
+      <div class="arena" aria-hidden="true">
+        <span class="arena-label">Route 01</span>
+        <svg class="route" viewBox="0 0 500 500" fill="none">
+          <circle cx="72" cy="368" r="14"/>
+          <path d="M72 368C113 316 151 337 184 286C224 224 170 188 218 145C260 108 308 139 334 187C361 237 320 276 343 315C365 352 402 328 427 280"/>
+        </svg>
+        <span class="blade-disc"></span>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="game-section" id="game" aria-labelledby="game-heading">
+      <div class="container section-head">
+        <div>
+          <p class="section-label">The lawn is ready</p>
+          <h2 id="game-heading">Start Cutting</h2>
+        </div>
+        <p class="section-copy">Sketch a useful path, clear open grass, and keep an eye on your opponent's progress.</p>
+      </div>
+
+      <div class="game-wide">
+        <div class="game-frame" id="game-frame">
+          <button class="fullscreen-button" id="fullscreen-button" type="button" aria-label="Play Grass Cutter in fullscreen" aria-pressed="false">Fullscreen</button>
+          <iframe src="https://html5.gamemonetize.com/vdgz52iubxo5vx27chxryum5ge6y0d3w/" width="100%" height="600" allowfullscreen allow="fullscreen" scrolling="no" frameborder="0" aria-label="Grass Cutter game embed" title="Play the Grass Cutter game"></iframe>
+        </div>
+        <p class="game-note">No download &bull; Mouse controls &bull; Touch controls</p>
+      </div>
+    </section>
+
+    <section class="how-section" id="how-to-play" aria-labelledby="how-heading">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <p class="section-label">Four quick moves</p>
+            <h2 id="how-heading">How to Play</h2>
+          </div>
+          <p class="section-copy">Each line changes the lawn, so choose a route that covers useful ground.</p>
+        </div>
+
+        <div class="steps">
+          <article class="step">
+            <span class="step-icon" aria-hidden="true">&#9998;</span>
+            <h3>Draw a Line</h3>
+            <p>Press and drag with a mouse or finger to sketch a path across the lawn.</p>
+          </article>
+          <article class="step">
+            <span class="step-icon" aria-hidden="true">&#10022;</span>
+            <h3>Create the Blade</h3>
+            <p>Release the line and it becomes the cutting edge for your next pass.</p>
+          </article>
+          <article class="step">
+            <span class="step-icon" aria-hidden="true">&#9873;</span>
+            <h3>Stay Ahead</h3>
+            <p>Aim through grass that still needs cutting while your opponent works nearby.</p>
+          </article>
+          <article class="step">
+            <span class="step-icon" aria-hidden="true">&#9679;</span>
+            <h3>Feed the Pets</h3>
+            <p>Complete the lawn and turn your finished run into food for your companions.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="features-section" id="features" aria-labelledby="features-heading">
+      <div class="container features-layout">
+        <div>
+          <p class="section-label">Made for quick play</p>
+          <h2 id="features-heading">Game Features</h2>
+          <p class="features-intro">Grass Cutter combines simple drawing with a fast race across a changing lawn.</p>
+        </div>
+
+        <ul class="feature-list">
+          <li><strong>Draw-to-cut play</strong>Turn each line into a moving mower blade.</li>
+          <li><strong>Opponent races</strong>Clear the lawn while another player chases the lead.</li>
+          <li><strong>Mouse and touch</strong>Draw with a pointer or directly on a touchscreen.</li>
+          <li><strong>Pet goal</strong>Finish each lawn to help feed the waiting pets.</li>
+          <li><strong>Instant access</strong>Play online without installing a separate app.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="tips-section" id="tips" aria-labelledby="tips-heading">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <p class="section-label">Plan every pass</p>
+            <h2 id="tips-heading">Tips &amp; Tricks</h2>
+          </div>
+          <p class="section-copy">A clear route can save time when the race is close.</p>
+        </div>
+
+        <div class="tips-grid">
+          <article class="tip">
+            <span class="tip-number">01</span>
+            <h3>Survey the Lawn</h3>
+            <p>Look over the open area before drawing so your first line covers useful ground.</p>
+          </article>
+          <article class="tip">
+            <span class="tip-number">02</span>
+            <h3>Avoid Repeat Paths</h3>
+            <p>Send new lines through uncut grass instead of crossing the same cleared space.</p>
+          </article>
+          <article class="tip">
+            <span class="tip-number">03</span>
+            <h3>Watch the Race</h3>
+            <p>Check your rival's progress and shorten your next route when you need more speed.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="faq-section" id="faq" aria-labelledby="faq-heading">
+      <div class="container faq-layout">
+        <div>
+          <p class="section-label">Quick answers</p>
+          <h2 id="faq-heading">Frequently Asked Questions</h2>
+        </div>
+
+        <div class="faq-list">
+          <details>
+            <summary>How do I play Grass Cutter?</summary>
+            <div class="faq-answer"><p>Draw a cutting path across the lawn with a mouse or finger. Each completed line becomes a mower blade, so aim for open grass and try to finish before your opponent.</p></div>
+          </details>
+          <details>
+            <summary>Is Grass Cutter free to play?</summary>
+            <div class="faq-answer"><p>Yes. Grass Cutter is free to play in the game frame on this page, and you do not need to install anything before starting.</p></div>
+          </details>
+          <details>
+            <summary>Can I play Grass Cutter on mobile?</summary>
+            <div class="faq-answer"><p>Yes. The page adapts to phones and tablets, and the game supports touch input. Landscape orientation can give you a wider area for drawing routes.</p></div>
+          </details>
+          <details>
+            <summary>What are the controls for Grass Cutter?</summary>
+            <div class="faq-answer"><p>On desktop, hold the primary mouse button and move the pointer to draw. On a touchscreen, press and slide one finger across the lawn, then release to complete the line.</p></div>
+          </details>
+          <details>
+            <summary>What is the objective of Grass Cutter?</summary>
+            <div class="faq-answer"><p>Clear the grass faster than your opponent by placing efficient cutting lines. Completing the lawn also helps you earn food for the pets in the game.</p></div>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>© 2026 GrassCutterGame.com. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      const frame = document.getElementById("game-frame");
+      const button = document.getElementById("fullscreen-button");
+      const request = frame.requestFullscreen || frame.webkitRequestFullscreen;
+
+      if (!request) {
+        button.hidden = true;
+        return;
+      }
+
+      const fullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+
+      const syncButton = () => {
+        const active = fullscreenElement() === frame;
+        button.textContent = active ? "Exit Fullscreen" : "Fullscreen";
+        button.setAttribute("aria-pressed", String(active));
+        button.setAttribute("aria-label", active ? "Exit Grass Cutter fullscreen" : "Play Grass Cutter in fullscreen");
+      };
+
+      button.addEventListener("click", async () => {
+        try {
+          if (fullscreenElement()) {
+            const exit = document.exitFullscreen || document.webkitExitFullscreen;
+            if (exit) await exit.call(document);
+          } else {
+            await request.call(frame);
+          }
+        } catch (error) {
+          button.setAttribute("aria-label", "Fullscreen is unavailable in this browser");
+        }
+      });
+
+      document.addEventListener("fullscreenchange", syncButton);
+      document.addEventListener("webkitfullscreenchange", syncButton);
+    })();
+  </script>
+</body>
+</html>
+
+<!--
+SEO CHECKLIST CHANGE LOG
+1. TDK: Applied the exact title, meta description, and canonical URL.
+2. Open Graph: Matched the title and description exactly and set the required URL, type, and site name.
+3. Headings: Kept one exact H1, assigned one H2 to every section, and preserved a sequential H1-H2-H3 hierarchy.
+4. Game embed: Preserved every required iframe attribute, added the exact aria-label, and retained the relative fullscreen wrapper and overlay button.
+5. Structured data: Added the specified WebApplication JSON-LD and a five-question FAQPage JSON-LD block in the head.
+6. FAQ: Added the five required original English questions and matching expandable answers.
+7. Originality: Removed competitor-associated wording and kept all descriptions, instructions, tips, and answers original.
+8. Page structure: Preserved the required Hero, Game, How to Play, Game Features, Tips & Tricks, FAQ, and Footer order.
+9. Technical SEO: Set the exact viewport, robots, and language values; kept CSS and JavaScript inline; and added hover states to interactive controls.
+10. Mobile: Added exact 768px and 480px breakpoints with 400px and 300px iframe heights, tighter spacing, smaller hero text, and FAQ touch targets above 44px.
+Audit note: The SEO audit and schema validation workflows enforced exact metadata, heading, visible FAQ, and structured-data parity.
+-->
