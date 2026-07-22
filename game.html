@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Grass Cutter</title>
   <style>
     :root {
@@ -107,7 +107,7 @@
       display: block;
       width: 100%;
       height: 100%;
-      cursor: crosshair;
+      cursor: default;
       touch-action: none;
     }
 
@@ -315,6 +315,51 @@
       pointer-events: none;
     }
 
+    .blade-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 7px;
+      margin: 0 0 13px;
+    }
+
+    .blade-stat {
+      min-width: 0;
+      padding: 8px 6px;
+      background: rgba(5, 19, 11, 0.72);
+      border: 1px solid rgba(248, 255, 232, 0.12);
+      border-radius: 7px;
+    }
+
+    .blade-stat span,
+    .blade-stat strong {
+      display: block;
+    }
+
+    .blade-stat span {
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-size: 0.56rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .blade-stat strong {
+      overflow: hidden;
+      color: var(--ink);
+      font-size: 0.79rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .blade-stat.rating {
+      border-color: rgba(200, 255, 85, 0.35);
+    }
+
+    .blade-stat.rating strong {
+      color: var(--lime);
+    }
+
     .actions {
       display: flex;
       gap: 10px;
@@ -328,7 +373,7 @@
 
     .result-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
       margin: 18px 0;
     }
@@ -443,9 +488,27 @@
         margin-bottom: 7px;
       }
 
+      .blade-stats {
+        gap: 4px;
+        margin-bottom: 7px;
+      }
+
+      .blade-stat {
+        padding: 5px 3px;
+      }
+
+      .blade-stat span {
+        font-size: 0.49rem;
+      }
+
+      .blade-stat strong {
+        font-size: 0.65rem;
+      }
+
       .actions button {
-        min-width: 112px;
-        min-height: 40px;
+        flex: 1;
+        min-width: 80px;
+        min-height: 44px;
         padding: 8px 12px;
         font-size: 0.66rem;
       }
@@ -480,7 +543,7 @@
 </head>
 <body>
   <main class="game-shell" id="game-shell">
-    <canvas id="game-canvas" tabindex="0" role="application" aria-label="Grass Cutter race. Steer with the pointer, touch, arrow keys, or A and D keys."></canvas>
+    <canvas id="game-canvas" tabindex="-1" role="img" aria-label="Grass Cutter automatic race. The blade drawn before the start determines cutting performance."></canvas>
 
     <div class="hud" aria-label="Race status">
       <div class="score-card">
@@ -497,19 +560,26 @@
       <div class="feed" id="feed">🐾 0</div>
     </div>
 
-    <p class="control-hint" id="control-hint">Drag across your lane or use ← → / A D to steer</p>
+    <p class="control-hint" id="control-hint">Automatic race &bull; Your blade controls the result</p>
 
     <section class="overlay" id="design-overlay" aria-labelledby="game-title">
       <div class="panel">
         <p class="kicker">Blade workshop</p>
         <h1 id="game-title">Grass Cutter</h1>
-        <p class="lede">Draw a line below. It becomes your spinning mower blade when the race begins.</p>
+        <p class="lede">Draw one blade below. Its span, balance, and flow decide how much grass your mower can clear.</p>
         <div class="draw-wrap">
           <canvas id="blade-pad" width="560" height="180" aria-label="Blade drawing area"></canvas>
           <span class="draw-label">Draw your blade</span>
         </div>
+        <div class="blade-stats" aria-label="Blade analysis">
+          <div class="blade-stat"><span>Span</span><strong id="blade-span">0%</strong></div>
+          <div class="blade-stat"><span>Balance</span><strong id="blade-balance">0%</strong></div>
+          <div class="blade-stat"><span>Flow</span><strong id="blade-flow">0%</strong></div>
+          <div class="blade-stat rating"><span>Rating</span><strong id="blade-rating">Draw</strong></div>
+        </div>
         <div class="actions">
           <button class="secondary" id="clear-blade" type="button">Clear Blade</button>
+          <button class="secondary" id="starter-blade" type="button">Use Starter</button>
           <button id="start-race" type="button">Start Race</button>
         </div>
       </div>
@@ -522,6 +592,7 @@
         <div class="result-grid">
           <div class="result-card"><span>Your lawn</span><strong id="result-player">0%</strong></div>
           <div class="result-card"><span>Rival lawn</span><strong id="result-rival">0%</strong></div>
+          <div class="result-card"><span>Blade rating</span><strong id="result-blade">0</strong></div>
         </div>
         <p class="pet-message" id="pet-message"><strong>🐶 Your pet is waiting.</strong></p>
         <div class="actions">
@@ -547,6 +618,7 @@
       const resultOverlay = document.getElementById("result-overlay");
       const startButton = document.getElementById("start-race");
       const clearButton = document.getElementById("clear-blade");
+      const starterButton = document.getElementById("starter-blade");
       const againButton = document.getElementById("race-again");
       const newBladeButton = document.getElementById("new-blade");
       const playerMeter = document.getElementById("player-meter");
@@ -561,6 +633,11 @@
       const resultRival = document.getElementById("result-rival");
       const petMessage = document.getElementById("pet-message");
       const announcement = document.getElementById("race-announcement");
+      const bladeSpanText = document.getElementById("blade-span");
+      const bladeBalanceText = document.getElementById("blade-balance");
+      const bladeFlowText = document.getElementById("blade-flow");
+      const bladeRatingText = document.getElementById("blade-rating");
+      const resultBlade = document.getElementById("result-blade");
 
       const RACE_SECONDS = 24;
       const COLS = 9;
@@ -571,6 +648,13 @@
         { x: 0.12, y: 0.28 },
         { x: 0.95, y: -0.08 }
       ];
+      const rivalBladeStats = {
+        span: 0.66,
+        balance: 0.78,
+        flow: 0.76,
+        rating: 71,
+        label: "Strong"
+      };
 
       let width = 0;
       let height = 0;
@@ -588,14 +672,12 @@
       let playerProgress = 0;
       let rivalProgress = 0;
       let playerX = 0.5;
-      let playerTargetX = 0.5;
       let rivalX = 0.5;
       let playerScore = 0;
       let rivalScore = 0;
-      let bladeAngle = 0;
-      let pointerActive = false;
-      let activePointer = null;
-      const keys = new Set();
+      let playerBladeAngle = 0;
+      let rivalBladeAngle = 0;
+      let playerBladeStats = { span: 0, balance: 0, flow: 0, rating: 0, label: "Draw" };
       let feed = readFeed();
 
       function readFeed() {
@@ -616,10 +698,6 @@
 
       function clamp(value, minimum, maximum) {
         return Math.max(minimum, Math.min(maximum, value));
-      }
-
-      function lerp(from, to, amount) {
-        return from + (to - from) * amount;
       }
 
       function roundedRect(context, x, y, w, h, radius) {
@@ -705,6 +783,7 @@
 
       function drawBladeOnPad() {
         drawPadGrid();
+        updateBladeStats();
         if (bladePoints.length < 2) return;
         padCtx.save();
         padCtx.lineCap = "round";
@@ -722,7 +801,15 @@
         padCtx.restore();
       }
 
-      function seedBlade() {
+      function padPoint(event) {
+        const rect = pad.getBoundingClientRect();
+        return {
+          x: clamp((event.clientX - rect.left) * pad.width / rect.width, 0, pad.width),
+          y: clamp((event.clientY - rect.top) * pad.height / rect.height, 0, pad.height)
+        };
+      }
+
+      function useStarterBlade() {
         bladePoints = [];
         const count = 28;
         for (let index = 0; index < count; index += 1) {
@@ -734,14 +821,57 @@
         }
         startButton.disabled = false;
         drawBladeOnPad();
+        startButton.focus({ preventScroll: true });
       }
 
-      function padPoint(event) {
-        const rect = pad.getBoundingClientRect();
-        return {
-          x: clamp((event.clientX - rect.left) * pad.width / rect.width, 0, pad.width),
-          y: clamp((event.clientY - rect.top) * pad.height / rect.height, 0, pad.height)
-        };
+      function analyzeBlade(points) {
+        if (points.length < 2) {
+          return { span: 0, balance: 0, flow: 0, rating: 0, label: "Draw" };
+        }
+
+        let minX = Infinity;
+        let maxX = -Infinity;
+        points.forEach((point) => {
+          minX = Math.min(minX, point.x);
+          maxX = Math.max(maxX, point.x);
+        });
+
+        const centerX = (minX + maxX) / 2;
+        let pathLength = 0;
+        let leftLength = 0;
+        let rightLength = 0;
+
+        for (let index = 1; index < points.length; index += 1) {
+          const previous = points[index - 1];
+          const current = points[index];
+          const segmentLength = Math.hypot(current.x - previous.x, current.y - previous.y);
+          const segmentCenter = (current.x + previous.x) / 2;
+          pathLength += segmentLength;
+          if (segmentCenter < centerX) leftLength += segmentLength;
+          else rightLength += segmentLength;
+        }
+
+        const directLength = Math.hypot(
+          points[points.length - 1].x - points[0].x,
+          points[points.length - 1].y - points[0].y
+        );
+        const span = clamp(((maxX - minX) / pad.width) / 0.75, 0, 1);
+        const balance = pathLength > 0
+          ? clamp(1 - Math.abs(leftLength - rightLength) / pathLength, 0, 1)
+          : 0;
+        const flow = pathLength > 0 ? clamp(directLength / pathLength, 0, 1) : 0;
+        const rating = Math.round((span * 0.5 + balance * 0.3 + flow * 0.2) * 100);
+        const label = rating >= 85 ? "Elite" : rating >= 70 ? "Strong" : rating >= 50 ? "Steady" : "Weak";
+
+        return { span, balance, flow, rating, label };
+      }
+
+      function updateBladeStats() {
+        const stats = analyzeBlade(bladePoints);
+        bladeSpanText.textContent = `${Math.round(stats.span * 100)}%`;
+        bladeBalanceText.textContent = `${Math.round(stats.balance * 100)}%`;
+        bladeFlowText.textContent = `${Math.round(stats.flow * 100)}%`;
+        bladeRatingText.textContent = stats.rating ? `${stats.label} ${stats.rating}` : "Draw";
       }
 
       function normalizeBlade() {
@@ -777,20 +907,21 @@
         playerProgress = 0;
         rivalProgress = 0;
         playerX = 0.5;
-        playerTargetX = 0.5;
         rivalX = 0.5;
         playerScore = 0;
         rivalScore = 0;
-        bladeAngle = 0;
+        playerBladeAngle = 0;
+        rivalBladeAngle = 0;
         updateHud();
       }
 
       function startRace() {
+        playerBladeStats = analyzeBlade(bladePoints);
         resetRace();
         phase = "racing";
         designOverlay.hidden = true;
         resultOverlay.hidden = true;
-        announcement.textContent = "The grass cutting race has started.";
+        announcement.textContent = `The automatic grass cutting race has started with a blade rating of ${playerBladeStats.rating}.`;
         canvas.focus({ preventScroll: true });
       }
 
@@ -838,16 +969,20 @@
         return Math.hypot(point.x - (start.x + t * dx), point.y - (start.y + t * dy));
       }
 
-      function cutLane(cells, lane, center, points, angle, isPlayer) {
-        const radius = isPlayer
-          ? clamp(lane.width * 0.31, 32, 134)
-          : clamp(lane.width * 0.13, 22, 58);
+      function bladeRadius(lane, stats) {
+        const radiusRatio = 0.085 + stats.span * 0.19 + stats.flow * 0.025;
+        return clamp(lane.width * radiusRatio, 18, lane.width * 0.34);
+      }
+
+      function cutLane(cells, lane, center, points, angle, stats, isPlayer) {
+        const radius = bladeRadius(lane, stats);
         const blade = transformedBlade(center, points, angle, radius);
         let newlyCut = 0;
         cells.forEach((cell) => {
           if (cell.cut) return;
           const position = lanePoint(cell, lane);
-          const threshold = Math.max(8, Math.min(position.cellWidth, position.cellHeight) * 0.78);
+          const cuttingEfficiency = 0.5 + stats.balance * 0.27 + stats.flow * 0.12;
+          const threshold = Math.max(7, Math.min(position.cellWidth, position.cellHeight) * cuttingEfficiency);
           let distance = Math.hypot(position.x - center.x, position.y - center.y) - 11;
           for (let index = 1; index < blade.length; index += 1) {
             distance = Math.min(distance, pointSegmentDistance(position, blade[index - 1], blade[index]));
@@ -884,22 +1019,25 @@
 
       function updateRace(delta) {
         raceElapsed += delta;
-        bladeAngle += delta * 7.2;
-
-        const keyDirection = (keys.has("arrowright") || keys.has("d") ? 1 : 0) - (keys.has("arrowleft") || keys.has("a") ? 1 : 0);
-        if (keyDirection) playerTargetX = clamp(playerTargetX + keyDirection * delta * 0.82, 0.09, 0.91);
-        playerX = lerp(playerX, playerTargetX, clamp(delta * 9, 0, 1));
+        playerBladeAngle += delta * (5 + playerBladeStats.flow * 3);
+        rivalBladeAngle += delta * (5 + rivalBladeStats.flow * 3);
 
         const raceRatio = clamp(raceElapsed / RACE_SECONDS, 0, 1);
-        playerProgress = clamp(raceRatio * 1.03, 0, 1);
-        rivalProgress = clamp(raceRatio * (0.985 + Math.sin(raceElapsed * 0.45) * 0.008), 0, 1);
-        rivalX = clamp(0.5 + Math.sin(raceElapsed * 1.05) * 0.2 + Math.sin(raceElapsed * 2.35) * 0.04, 0.22, 0.78);
+        const automaticX = clamp(
+          0.5 + Math.sin(raceElapsed * 1.05) * 0.115 + Math.sin(raceElapsed * 2.35) * 0.025,
+          0.22,
+          0.78
+        );
+        playerProgress = raceRatio;
+        rivalProgress = raceRatio;
+        playerX = automaticX;
+        rivalX = automaticX;
 
         const playerCenter = mowerPoint(layout.playerLane, playerProgress, playerX);
         const rivalCenter = mowerPoint(layout.rivalLane, rivalProgress, rivalX);
         const normalized = normalizeBlade();
-        cutLane(playerCells, layout.playerLane, playerCenter, normalized, bladeAngle, true);
-        cutLane(rivalCells, layout.rivalLane, rivalCenter, rivalBlade, -bladeAngle * 0.88, false);
+        cutLane(playerCells, layout.playerLane, playerCenter, normalized, playerBladeAngle, playerBladeStats, true);
+        cutLane(rivalCells, layout.rivalLane, rivalCenter, rivalBlade, rivalBladeAngle, rivalBladeStats, false);
         playerScore = playerCells.filter((cell) => cell.cut).length / playerCells.length;
         rivalScore = rivalCells.filter((cell) => cell.cut).length / rivalCells.length;
 
@@ -941,8 +1079,9 @@
 
         resultPlayer.textContent = `${playerPercent}%`;
         resultRival.textContent = `${rivalPercent}%`;
+        resultBlade.textContent = `${playerBladeStats.rating}/100`;
         resultOverlay.hidden = false;
-        announcement.textContent = `Race complete. You cut ${playerPercent} percent and the rival cut ${rivalPercent} percent.`;
+        announcement.textContent = `Race complete. Your blade rated ${playerBladeStats.rating} and cut ${playerPercent} percent. The rival cut ${rivalPercent} percent.`;
         againButton.focus({ preventScroll: true });
       }
 
@@ -1013,10 +1152,8 @@
         }
       }
 
-      function drawMower(center, lane, points, angle, accent, label) {
-        const radius = label === "YOU"
-          ? clamp(lane.width * 0.31, 32, 134)
-          : clamp(lane.width * 0.13, 22, 58);
+      function drawMower(center, lane, points, angle, stats, accent, label) {
+        const radius = bladeRadius(lane, stats);
         const blade = transformedBlade(center, points, angle, radius);
 
         ctx.save();
@@ -1088,8 +1225,8 @@
         if (phase === "racing" || phase === "result") {
           const playerCenter = mowerPoint(layout.playerLane, playerProgress, playerX);
           const rivalCenter = mowerPoint(layout.rivalLane, rivalProgress, rivalX);
-          drawMower(playerCenter, layout.playerLane, normalizeBlade(), bladeAngle, "#c8ff55", "YOU");
-          drawMower(rivalCenter, layout.rivalLane, rivalBlade, -bladeAngle * 0.88, "#ffb84d", "RIVAL");
+          drawMower(playerCenter, layout.playerLane, normalizeBlade(), playerBladeAngle, playerBladeStats, "#c8ff55", "YOU");
+          drawMower(rivalCenter, layout.rivalLane, rivalBlade, rivalBladeAngle, rivalBladeStats, "#ffb84d", "RIVAL");
         }
         drawParticles();
       }
@@ -1100,13 +1237,6 @@
         if (phase === "racing") updateRace(delta);
         render();
         requestAnimationFrame(animationLoop);
-      }
-
-      function setPlayerTarget(event) {
-        if (!layout || phase !== "racing") return;
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        playerTargetX = clamp((x - layout.playerLane.x) / layout.playerLane.width, 0.09, 0.91);
       }
 
       pad.addEventListener("pointerdown", (event) => {
@@ -1135,46 +1265,11 @@
         drawing = false;
         drawingPointer = null;
         startButton.disabled = bladePoints.length < 3;
+        updateBladeStats();
       };
 
       pad.addEventListener("pointerup", finishDrawing);
       pad.addEventListener("pointercancel", finishDrawing);
-
-      canvas.addEventListener("pointerdown", (event) => {
-        if (phase !== "racing") return;
-        pointerActive = true;
-        activePointer = event.pointerId;
-        canvas.setPointerCapture(event.pointerId);
-        setPlayerTarget(event);
-      });
-
-      canvas.addEventListener("pointermove", (event) => {
-        if (pointerActive && event.pointerId === activePointer) setPlayerTarget(event);
-      });
-
-      const releasePointer = (event) => {
-        if (event.pointerId !== activePointer) return;
-        pointerActive = false;
-        activePointer = null;
-      };
-
-      canvas.addEventListener("pointerup", releasePointer);
-      canvas.addEventListener("pointercancel", releasePointer);
-
-      window.addEventListener("keydown", (event) => {
-        const key = event.key.toLowerCase();
-        if (["arrowleft", "arrowright", "a", "d"].includes(key)) {
-          event.preventDefault();
-          keys.add(key);
-        }
-        if ((event.key === " " || event.key === "Enter") && phase === "design" && !startButton.disabled) {
-          event.preventDefault();
-          startRace();
-        }
-      });
-
-      window.addEventListener("keyup", (event) => keys.delete(event.key.toLowerCase()));
-      window.addEventListener("blur", () => keys.clear());
       window.addEventListener("resize", resize, { passive: true });
 
       startButton.addEventListener("click", startRace);
@@ -1183,13 +1278,15 @@
         startButton.disabled = true;
         drawBladeOnPad();
       });
+      starterButton.addEventListener("click", useStarterBlade);
       againButton.addEventListener("click", startRace);
       newBladeButton.addEventListener("click", showDesigner);
 
       feedText.textContent = `🐾 ${feed}`;
       playerCells = makeCells();
       rivalCells = makeCells();
-      seedBlade();
+      startButton.disabled = true;
+      drawBladeOnPad();
       resize();
       requestAnimationFrame(animationLoop);
     })();
