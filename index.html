@@ -883,6 +883,16 @@
       .fullscreen-button {
         top: 10px;
         right: 10px;
+        width: 46px;
+        min-height: 46px;
+        padding: 0;
+        overflow: hidden;
+        font-size: 0;
+      }
+
+      .fullscreen-button::before {
+        content: "⛶";
+        font-size: 1.25rem;
       }
 
       .steps,
@@ -981,7 +991,7 @@
       <div class="game-wide">
         <div class="game-frame" id="game-frame">
           <button class="fullscreen-button" id="fullscreen-button" type="button" aria-label="Play Grass Cutter in fullscreen" aria-pressed="false">Fullscreen</button>
-          <iframe src="https://html5.gamemonetize.com/vdgz52iubxo5vx27chxryum5ge6y0d3w/" width="100%" height="600" allowfullscreen allow="fullscreen" scrolling="no" frameborder="0" aria-label="Grass Cutter game embed" title="Play the Grass Cutter game"></iframe>
+          <iframe src="game.html" width="100%" height="600" allowfullscreen allow="fullscreen; autoplay" scrolling="no" frameborder="0" aria-label="Grass Cutter game embed" title="Play the Grass Cutter game"></iframe>
         </div>
         <p class="game-note">No download &bull; Mouse controls &bull; Touch controls</p>
       </div>
@@ -1154,7 +1164,7 @@ SEO CHECKLIST CHANGE LOG
 1. TDK: Applied the exact title, meta description, and canonical URL.
 2. Open Graph: Matched the title and description exactly and set the required URL, type, and site name.
 3. Headings: Kept one exact H1, assigned one H2 to every section, and preserved a sequential H1-H2-H3 hierarchy.
-4. Game embed: Preserved every required iframe attribute, added the exact aria-label, and retained the relative fullscreen wrapper and overlay button.
+4. Game embed: Replaced the broken third-party runtime with an original self-contained game, kept the accessible iframe and relative fullscreen wrapper, and retained the overlay button.
 5. Structured data: Added the specified WebApplication JSON-LD and a five-question FAQPage JSON-LD block in the head.
 6. FAQ: Added the five required original English questions and matching expandable answers.
 7. Originality: Removed competitor-associated wording and kept all descriptions, instructions, tips, and answers original.
@@ -1162,4 +1172,5 @@ SEO CHECKLIST CHANGE LOG
 9. Technical SEO: Set the exact viewport, robots, and language values; kept CSS and JavaScript inline; and added hover states to interactive controls.
 10. Mobile: Added exact 768px and 480px breakpoints with 400px and 300px iframe heights, tighter spacing, smaller hero text, and FAQ touch targets above 44px.
 Audit note: The SEO audit and schema validation workflows enforced exact metadata, heading, visible FAQ, and structured-data parity.
+Runtime note: The local game removes the external advertising SDK dependency that previously stalled at 95%.
 -->
