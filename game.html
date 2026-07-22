@@ -155,6 +155,18 @@
       text-transform: uppercase;
     }
 
+    .score-value,
+    .timer {
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1;
+    }
+
+    .score-value {
+      min-width: 58px;
+      letter-spacing: 0.015em;
+      text-align: right;
+    }
+
     .score-name.player {
       color: var(--lime);
     }
@@ -193,6 +205,14 @@
     .timer {
       min-width: 58px;
       color: var(--ink);
+      transition: color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .timer.urgent {
+      color: #fff2d6;
+      border-color: rgba(255, 111, 97, 0.72);
+      box-shadow: 0 0 0 1px rgba(255, 111, 97, 0.18), 0 0 24px rgba(255, 111, 97, 0.28);
+      animation: urgency-pulse 720ms ease-in-out infinite alternate;
     }
 
     .feed {
@@ -216,7 +236,32 @@
       letter-spacing: 0.04em;
       text-align: center;
       transform: translateX(-50%);
+      transition: color 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
       white-space: nowrap;
+    }
+
+    .control-hint.player-lead {
+      color: var(--lime);
+      background: rgba(8, 36, 18, 0.92);
+      border-color: rgba(200, 255, 85, 0.46);
+      box-shadow: 0 0 22px rgba(200, 255, 85, 0.12);
+    }
+
+    .control-hint.rival-lead {
+      color: var(--orange);
+      background: rgba(41, 24, 8, 0.92);
+      border-color: rgba(255, 184, 77, 0.48);
+      box-shadow: 0 0 22px rgba(255, 184, 77, 0.12);
+    }
+
+    .control-hint.tied {
+      color: var(--ink);
+      border-color: rgba(248, 255, 232, 0.25);
+    }
+
+    @keyframes urgency-pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.045); }
     }
 
     .overlay {
@@ -443,6 +488,11 @@
         grid-template-columns: 1fr auto;
       }
 
+      .score-value {
+        min-width: 52px;
+        font-size: 0.62rem;
+      }
+
       .score-card .meter {
         grid-column: 1 / -1;
         grid-row: 2;
@@ -531,11 +581,49 @@
       }
     }
 
+    @media (max-width: 480px) and (min-height: 441px) {
+      .panel {
+        padding: 22px 14px;
+      }
+
+      .result-grid {
+        gap: 6px;
+      }
+
+      .result-card {
+        padding: 12px 4px;
+      }
+
+      .result-card span {
+        font-size: 0.54rem;
+      }
+
+      .result-card strong {
+        font-size: 1.15rem;
+      }
+    }
+
+    @media (max-width: 300px) {
+      .result-grid {
+        gap: 4px;
+      }
+
+      .result-card {
+        padding-inline: 2px;
+      }
+
+      .result-card strong {
+        font-size: 0.82rem;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *,
       *::before,
       *::after {
         scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
       }
     }
@@ -549,13 +637,13 @@
       <div class="score-card">
         <span class="score-name player">You</span>
         <span class="meter"><span id="player-meter"></span></span>
-        <span class="score-value" id="player-score">0%</span>
+        <span class="score-value" id="player-score">0.00%</span>
       </div>
       <div class="timer" id="timer">24s</div>
       <div class="score-card">
         <span class="score-name rival">Rival</span>
         <span class="meter rival-meter"><span id="rival-meter"></span></span>
-        <span class="score-value" id="rival-score">0%</span>
+        <span class="score-value" id="rival-score">0.00%</span>
       </div>
       <div class="feed" id="feed">🐾 0</div>
     </div>
@@ -590,8 +678,8 @@
         <p class="kicker" id="result-kicker">Race complete</p>
         <h2 id="result-title">Lawn Cleared</h2>
         <div class="result-grid">
-          <div class="result-card"><span>Your lawn</span><strong id="result-player">0%</strong></div>
-          <div class="result-card"><span>Rival lawn</span><strong id="result-rival">0%</strong></div>
+          <div class="result-card"><span>Your lawn</span><strong id="result-player">0.00%</strong></div>
+          <div class="result-card"><span>Rival lawn</span><strong id="result-rival">0.00%</strong></div>
           <div class="result-card"><span>Blade rating</span><strong id="result-blade">0</strong></div>
         </div>
         <p class="pet-message" id="pet-message"><strong>🐶 Your pet is waiting.</strong></p>
@@ -627,6 +715,7 @@
       const rivalScoreText = document.getElementById("rival-score");
       const timerText = document.getElementById("timer");
       const feedText = document.getElementById("feed");
+      const controlHint = document.getElementById("control-hint");
       const resultTitle = document.getElementById("result-title");
       const resultKicker = document.getElementById("result-kicker");
       const resultPlayer = document.getElementById("result-player");
@@ -640,8 +729,14 @@
       const resultBlade = document.getElementById("result-blade");
 
       const RACE_SECONDS = 24;
-      const COLS = 9;
-      const ROWS = 18;
+      const COLS = 16;
+      const ROWS = 32;
+      const FIXED_STEP = 1 / 60;
+      const MAX_SIMULATION_STEPS = 6;
+      const TOTAL_RACE_TICKS = Math.round(RACE_SECONDS / FIXED_STEP);
+      const MILESTONES = [0.25, 0.5, 0.75];
+      const UNCUT_SHADES = ["#2d9848", "#319d4b", "#35a14e", "#2f9a49"];
+      const CUT_SHADES = ["#153f24", "#174527", "#194a29", "#164325"];
       const rivalBlade = [
         { x: -0.95, y: 0.05 },
         { x: -0.38, y: -0.34 },
@@ -668,16 +763,30 @@
       let rivalCells = [];
       let particles = [];
       let raceElapsed = 0;
+      let raceTick = 0;
       let lastTime = performance.now();
+      let simulationAccumulator = 0;
       let playerProgress = 0;
       let rivalProgress = 0;
       let playerX = 0.5;
       let rivalX = 0.5;
       let playerScore = 0;
       let rivalScore = 0;
+      let playerCutCount = 0;
+      let rivalCutCount = 0;
       let playerBladeAngle = 0;
       let rivalBladeAngle = 0;
       let playerBladeStats = { span: 0, balance: 0, flow: 0, rating: 0, label: "Draw" };
+      let playerRaceBlade = [{ x: -1, y: 0 }, { x: 1, y: 0 }];
+      let playerFeedback = createLaneFeedback();
+      let rivalFeedback = createLaneFeedback();
+      let halfwayAnnounced = false;
+      let finalFiveAnnounced = false;
+      let lastHudKey = "";
+      let lastFeedValue = null;
+      let lastRenderedPhase = "";
+      const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+      let reducedMotion = motionQuery.matches;
       let feed = readFeed();
 
       function readFeed() {
@@ -700,6 +809,15 @@
         return Math.max(minimum, Math.min(maximum, value));
       }
 
+      function createLaneFeedback() {
+        return {
+          energy: 0,
+          chain: 0,
+          chainWindow: 0,
+          milestone: { nextIndex: 0, text: "", life: 0, maxLife: 0.75, tier: 0 }
+        };
+      }
+
       function roundedRect(context, x, y, w, h, radius) {
         const r = Math.min(radius, w / 2, h / 2);
         context.beginPath();
@@ -713,10 +831,14 @@
 
       function makeCells() {
         return Array.from({ length: ROWS * COLS }, (_, index) => ({
+          index,
           column: index % COLS,
           row: Math.floor(index / COLS),
           cut: false,
-          shade: (index * 17 + Math.floor(index / COLS) * 11) % 4
+          cutAt: -1,
+          shade: (index * 17 + Math.floor(index / COLS) * 11) % UNCUT_SHADES.length,
+          tuft: (index * 13 + Math.floor(index / COLS) * 7) % 3,
+          lean: (((index * 29) % 9) - 4) / 4
         }));
       }
 
@@ -904,21 +1026,31 @@
         rivalCells = makeCells();
         particles = [];
         raceElapsed = 0;
+        raceTick = 0;
+        simulationAccumulator = 0;
         playerProgress = 0;
         rivalProgress = 0;
         playerX = 0.5;
         rivalX = 0.5;
         playerScore = 0;
         rivalScore = 0;
+        playerCutCount = 0;
+        rivalCutCount = 0;
         playerBladeAngle = 0;
         rivalBladeAngle = 0;
-        updateHud();
+        playerFeedback = createLaneFeedback();
+        rivalFeedback = createLaneFeedback();
+        halfwayAnnounced = false;
+        finalFiveAnnounced = false;
+        lastHudKey = "";
+        updateHud(true);
       }
 
       function startRace() {
         playerBladeStats = analyzeBlade(bladePoints);
-        resetRace();
+        playerRaceBlade = normalizeBlade();
         phase = "racing";
+        resetRace();
         designOverlay.hidden = true;
         resultOverlay.hidden = true;
         announcement.textContent = `The automatic grass cutting race has started with a blade rating of ${playerBladeStats.rating}.`;
@@ -931,17 +1063,6 @@
         designOverlay.hidden = false;
         drawBladeOnPad();
         startButton.focus({ preventScroll: true });
-      }
-
-      function lanePoint(cell, lane) {
-        const cellWidth = lane.width / COLS;
-        const cellHeight = layout.laneHeight / ROWS;
-        return {
-          x: lane.x + (cell.column + 0.5) * cellWidth,
-          y: layout.top + (cell.row + 0.5) * cellHeight,
-          cellWidth,
-          cellHeight
-        };
       }
 
       function mowerPoint(lane, progress, xRatio) {
@@ -974,53 +1095,177 @@
         return clamp(lane.width * radiusRatio, 18, lane.width * 0.34);
       }
 
+      function spawnClipping(position, isPlayer, cell) {
+        const life = 0.35 + Math.random() * 0.3;
+        particles.push({
+          x: position.x,
+          y: position.y,
+          vx: (Math.random() - 0.5) * 72,
+          vy: -24 - Math.random() * 34,
+          life,
+          maxLife: life,
+          length: 3 + Math.random() * 3,
+          width: 1.5 + Math.random() * 0.5,
+          rotation: Math.random() * Math.PI,
+          spin: (Math.random() - 0.5) * 8,
+          color: isPlayer
+            ? (cell.index % 2 ? "#c8ff55" : "#21d76d")
+            : (cell.index % 2 ? "#ffb84d" : "#b7b43b")
+        });
+      }
+
       function cutLane(cells, lane, center, points, angle, stats, isPlayer) {
         const radius = bladeRadius(lane, stats);
         const blade = transformedBlade(center, points, angle, radius);
+        const cellWidth = lane.width / COLS;
+        const cellHeight = layout.laneHeight / ROWS;
+        const cuttingEfficiency = 0.5 + stats.balance * 0.27 + stats.flow * 0.12;
+        const threshold = Math.max(3, Math.min(cellWidth, cellHeight) * cuttingEfficiency);
+        let minimumX = center.x - 11;
+        let maximumX = center.x + 11;
+        let minimumY = center.y - 11;
+        let maximumY = center.y + 11;
+        blade.forEach((point) => {
+          minimumX = Math.min(minimumX, point.x);
+          maximumX = Math.max(maximumX, point.x);
+          minimumY = Math.min(minimumY, point.y);
+          maximumY = Math.max(maximumY, point.y);
+        });
+        const firstColumn = clamp(
+          Math.ceil((minimumX - threshold - lane.x) / cellWidth - 0.5),
+          0,
+          COLS - 1
+        );
+        const lastColumn = clamp(
+          Math.floor((maximumX + threshold - lane.x) / cellWidth - 0.5),
+          0,
+          COLS - 1
+        );
+        const firstRow = clamp(
+          Math.ceil((minimumY - threshold - layout.top) / cellHeight - 0.5),
+          0,
+          ROWS - 1
+        );
+        const lastRow = clamp(
+          Math.floor((maximumY + threshold - layout.top) / cellHeight - 0.5),
+          0,
+          ROWS - 1
+        );
+        const particleLimit = width < 620 || height < 420 ? 80 : 120;
         let newlyCut = 0;
-        cells.forEach((cell) => {
-          if (cell.cut) return;
-          const position = lanePoint(cell, lane);
-          const cuttingEfficiency = 0.5 + stats.balance * 0.27 + stats.flow * 0.12;
-          const threshold = Math.max(7, Math.min(position.cellWidth, position.cellHeight) * cuttingEfficiency);
-          let distance = Math.hypot(position.x - center.x, position.y - center.y) - 11;
-          for (let index = 1; index < blade.length; index += 1) {
-            distance = Math.min(distance, pointSegmentDistance(position, blade[index - 1], blade[index]));
-          }
-          if (distance <= threshold) {
+        let emitted = 0;
+
+        for (let row = firstRow; row <= lastRow; row += 1) {
+          for (let column = firstColumn; column <= lastColumn; column += 1) {
+            const cell = cells[row * COLS + column];
+            if (cell.cut) continue;
+            const position = {
+              x: lane.x + (column + 0.5) * cellWidth,
+              y: layout.top + (row + 0.5) * cellHeight,
+              cellWidth,
+              cellHeight
+            };
+            let distance = Math.hypot(position.x - center.x, position.y - center.y) - 11;
+            for (let index = 1; index < blade.length; index += 1) {
+              distance = Math.min(distance, pointSegmentDistance(position, blade[index - 1], blade[index]));
+            }
+            if (distance > threshold) continue;
+
             cell.cut = true;
+            cell.cutAt = raceElapsed;
             newlyCut += 1;
-            if (particles.length < 100 && (isPlayer || Math.random() > 0.55)) {
-              particles.push({
-                x: position.x,
-                y: position.y,
-                vx: (Math.random() - 0.5) * 46,
-                vy: -22 - Math.random() * 36,
-                life: 0.55 + Math.random() * 0.35,
-                maxLife: 0.9,
-                color: isPlayer ? "#c8ff55" : "#ffb84d"
-              });
+
+            const sampleParticle = newlyCut <= 2 || (cell.index + Math.floor(raceElapsed * 60)) % 3 === 0;
+            if (!reducedMotion && emitted < 5 && particles.length < particleLimit && sampleParticle) {
+              spawnClipping(position, isPlayer, cell);
+              emitted += 1;
             }
           }
-        });
+        }
         return newlyCut;
       }
 
-      function updateHud() {
-        const playerPercent = Math.round(playerScore * 100);
-        const rivalPercent = Math.round(rivalScore * 100);
-        playerMeter.style.width = `${playerPercent}%`;
-        rivalMeter.style.width = `${rivalPercent}%`;
-        playerScoreText.textContent = `${playerPercent}%`;
-        rivalScoreText.textContent = `${rivalPercent}%`;
-        timerText.textContent = `${Math.max(0, Math.ceil(RACE_SECONDS - raceElapsed))}s`;
-        feedText.textContent = `🐾 ${feed}`;
+      function updateLaneFeedback(feedback, newlyCut, score, delta) {
+        feedback.energy = Math.max(0, feedback.energy - delta * 3.6);
+        feedback.milestone.life = Math.max(0, feedback.milestone.life - delta);
+
+        if (newlyCut > 0) {
+          feedback.energy = Math.min(1, feedback.energy + newlyCut * 0.07);
+          feedback.chain = Math.min(999, feedback.chain + newlyCut);
+          feedback.chainWindow = 0.22;
+        } else {
+          feedback.chainWindow -= delta;
+          if (feedback.chainWindow <= 0) feedback.chain = 0;
+        }
+
+        while (
+          feedback.milestone.nextIndex < MILESTONES.length &&
+          score >= MILESTONES[feedback.milestone.nextIndex]
+        ) {
+          const milestone = MILESTONES[feedback.milestone.nextIndex];
+          feedback.milestone.text = `${Math.round(milestone * 100)}% CLEARED`;
+          feedback.milestone.life = feedback.milestone.maxLife;
+          feedback.milestone.tier = feedback.milestone.nextIndex + 1;
+          feedback.milestone.nextIndex += 1;
+        }
+      }
+
+      function updateHud(force = false) {
+        const playerPercent = playerScore * 100;
+        const rivalPercent = rivalScore * 100;
+        const remaining = Math.max(0, RACE_SECONDS - raceElapsed);
+        const timerValue = phase === "racing" && remaining <= 5
+          ? `${remaining.toFixed(1)}s`
+          : `${Math.ceil(remaining)}s`;
+        const difference = playerPercent - rivalPercent;
+        let leadText = "Automatic race • Your blade controls the result";
+        let leadClass = "";
+
+        if (phase === "racing" || phase === "result") {
+          if (Math.abs(difference) < 0.005) {
+            leadText = "TIED • 0.00%";
+            leadClass = "tied";
+          } else if (difference > 0) {
+            leadText = `YOU LEAD +${difference.toFixed(2)}%`;
+            leadClass = "player-lead";
+          } else {
+            leadText = `RIVAL LEADS +${Math.abs(difference).toFixed(2)}%`;
+            leadClass = "rival-lead";
+          }
+        }
+
+        const hudKey = [
+          playerPercent.toFixed(4),
+          rivalPercent.toFixed(4),
+          timerValue,
+          leadText,
+          phase
+        ].join("|");
+
+        if (force || hudKey !== lastHudKey) {
+          playerMeter.style.width = `${clamp(playerPercent, 0, 100).toFixed(4)}%`;
+          rivalMeter.style.width = `${clamp(rivalPercent, 0, 100).toFixed(4)}%`;
+          playerScoreText.textContent = `${playerPercent.toFixed(2)}%`;
+          rivalScoreText.textContent = `${rivalPercent.toFixed(2)}%`;
+          timerText.textContent = timerValue;
+          timerText.classList.toggle("urgent", phase === "racing" && remaining > 0 && remaining <= 5);
+          controlHint.textContent = leadText;
+          controlHint.className = "control-hint";
+          if (leadClass) controlHint.classList.add(leadClass);
+          lastHudKey = hudKey;
+        }
+
+        if (force || feed !== lastFeedValue) {
+          feedText.textContent = `🐾 ${feed}`;
+          lastFeedValue = feed;
+        }
       }
 
       function updateRace(delta) {
-        raceElapsed += delta;
-        playerBladeAngle += delta * (5 + playerBladeStats.flow * 3);
-        rivalBladeAngle += delta * (5 + rivalBladeStats.flow * 3);
+        raceTick = Math.min(TOTAL_RACE_TICKS, raceTick + 1);
+        raceElapsed = raceTick * FIXED_STEP;
+        playerBladeAngle = raceElapsed * (5 + playerBladeStats.flow * 3);
+        rivalBladeAngle = raceElapsed * (5 + rivalBladeStats.flow * 3);
 
         const raceRatio = clamp(raceElapsed / RACE_SECONDS, 0, 1);
         const automaticX = clamp(
@@ -1035,33 +1280,62 @@
 
         const playerCenter = mowerPoint(layout.playerLane, playerProgress, playerX);
         const rivalCenter = mowerPoint(layout.rivalLane, rivalProgress, rivalX);
-        const normalized = normalizeBlade();
-        cutLane(playerCells, layout.playerLane, playerCenter, normalized, playerBladeAngle, playerBladeStats, true);
-        cutLane(rivalCells, layout.rivalLane, rivalCenter, rivalBlade, rivalBladeAngle, rivalBladeStats, false);
-        playerScore = playerCells.filter((cell) => cell.cut).length / playerCells.length;
-        rivalScore = rivalCells.filter((cell) => cell.cut).length / rivalCells.length;
+        const playerNewlyCut = cutLane(
+          playerCells,
+          layout.playerLane,
+          playerCenter,
+          playerRaceBlade,
+          playerBladeAngle,
+          playerBladeStats,
+          true
+        );
+        const rivalNewlyCut = cutLane(
+          rivalCells,
+          layout.rivalLane,
+          rivalCenter,
+          rivalBlade,
+          rivalBladeAngle,
+          rivalBladeStats,
+          false
+        );
+        playerCutCount += playerNewlyCut;
+        rivalCutCount += rivalNewlyCut;
+        playerScore = playerCutCount / playerCells.length;
+        rivalScore = rivalCutCount / rivalCells.length;
+        updateLaneFeedback(playerFeedback, playerNewlyCut, playerScore, delta);
+        updateLaneFeedback(rivalFeedback, rivalNewlyCut, rivalScore, delta);
 
         particles.forEach((particle) => {
           particle.life -= delta;
           particle.x += particle.vx * delta;
           particle.y += particle.vy * delta;
-          particle.vy += 90 * delta;
+          particle.vy += 105 * delta;
+          particle.rotation += particle.spin * delta;
         });
         particles = particles.filter((particle) => particle.life > 0);
-        updateHud();
 
-        if (raceElapsed >= RACE_SECONDS) finishRace();
+        if (!halfwayAnnounced && raceElapsed >= RACE_SECONDS / 2) {
+          halfwayAnnounced = true;
+          announcement.textContent = `Halfway point. You have cut ${(playerScore * 100).toFixed(2)} percent.`;
+        }
+        if (!finalFiveAnnounced && RACE_SECONDS - raceElapsed <= 5) {
+          finalFiveAnnounced = true;
+          announcement.textContent = "Five seconds remain in the automatic race.";
+        }
+
+        updateHud();
+        if (raceTick >= TOTAL_RACE_TICKS) finishRace();
       }
 
       function finishRace() {
         phase = "result";
-        const playerPercent = Math.round(playerScore * 100);
-        const rivalPercent = Math.round(rivalScore * 100);
-        const difference = playerPercent - rivalPercent;
+        const playerPercent = playerScore * 100;
+        const rivalPercent = rivalScore * 100;
+        const difference = playerCutCount - rivalCutCount;
         const reward = difference > 0 ? 12 : difference === 0 ? 8 : 5;
         feed += reward;
         saveFeed();
-        updateHud();
+        updateHud(true);
 
         if (difference > 0) {
           resultKicker.textContent = "You won the race";
@@ -1077,11 +1351,11 @@
           petMessage.innerHTML = `<strong>🐱 Keep mowing!</strong> You still earned ${reward} bowls of pet food.`;
         }
 
-        resultPlayer.textContent = `${playerPercent}%`;
-        resultRival.textContent = `${rivalPercent}%`;
+        resultPlayer.textContent = `${playerPercent.toFixed(2)}%`;
+        resultRival.textContent = `${rivalPercent.toFixed(2)}%`;
         resultBlade.textContent = `${playerBladeStats.rating}/100`;
         resultOverlay.hidden = false;
-        announcement.textContent = `Race complete. Your blade rated ${playerBladeStats.rating} and cut ${playerPercent} percent. The rival cut ${rivalPercent} percent.`;
+        announcement.textContent = `Race complete. Your blade rated ${playerBladeStats.rating} and cut ${playerPercent.toFixed(2)} percent. The rival cut ${rivalPercent.toFixed(2)} percent.`;
         againButton.focus({ preventScroll: true });
       }
 
@@ -1097,7 +1371,10 @@
         for (let y = 0; y < height; y += 42) ctx.fillRect(0, y, width, 1);
       }
 
-      function drawLane(lane, cells, accent) {
+      function drawLane(lane, cells, accent, feedback) {
+        const cellWidth = lane.width / COLS;
+        const cellHeight = layout.laneHeight / ROWS;
+        const tuftHeight = clamp(cellHeight * 0.58, 2.5, 9);
         ctx.save();
         roundedRect(ctx, lane.x, layout.top, lane.width, layout.laneHeight, 12);
         ctx.clip();
@@ -1105,38 +1382,66 @@
         ctx.fillRect(lane.x, layout.top, lane.width, layout.laneHeight);
 
         cells.forEach((cell) => {
-          const position = lanePoint(cell, lane);
-          const x = lane.x + cell.column * position.cellWidth;
-          const y = layout.top + cell.row * position.cellHeight;
-          if (cell.cut) {
-            ctx.fillStyle = cell.shade % 2 ? "#174a29" : "#1b5530";
-            ctx.fillRect(x, y, position.cellWidth + 0.5, position.cellHeight + 0.5);
-            ctx.strokeStyle = "rgba(200,255,85,.12)";
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(position.x - 3, position.y + 2);
-            ctx.lineTo(position.x + 4, position.y + 2);
-            ctx.stroke();
-          } else {
-            const shades = ["#2d9c49", "#35a94f", "#259143", "#3db456"];
-            ctx.fillStyle = shades[cell.shade];
-            ctx.fillRect(x, y, position.cellWidth + 0.5, position.cellHeight + 0.5);
-            if ((cell.column + cell.row) % 2 === 0) {
-              ctx.strokeStyle = "rgba(220,255,170,.34)";
-              ctx.lineWidth = 1.2;
-              ctx.beginPath();
-              ctx.moveTo(position.x, position.y + position.cellHeight * 0.28);
-              ctx.lineTo(position.x - 2, position.y - position.cellHeight * 0.22);
-              ctx.moveTo(position.x, position.y + position.cellHeight * 0.28);
-              ctx.lineTo(position.x + 3, position.y - position.cellHeight * 0.14);
-              ctx.stroke();
-            }
-          }
+          const x = lane.x + cell.column * cellWidth;
+          const y = layout.top + cell.row * cellHeight;
+          ctx.fillStyle = cell.cut ? CUT_SHADES[cell.shade] : UNCUT_SHADES[cell.shade];
+          ctx.fillRect(x, y, cellWidth + 0.55, cellHeight + 0.55);
         });
 
-        ctx.fillStyle = "rgba(255,255,255,.07)";
-        for (let column = 0; column < COLS; column += 2) {
-          ctx.fillRect(lane.x + column * lane.width / COLS, layout.top, lane.width / COLS, layout.laneHeight);
+        ctx.fillStyle = "rgba(255,255,255,.035)";
+        for (let column = 0; column < COLS; column += 4) {
+          ctx.fillRect(lane.x + column * cellWidth, layout.top, cellWidth * 2, layout.laneHeight);
+        }
+
+        ctx.strokeStyle = "rgba(222,255,183,.42)";
+        ctx.lineWidth = clamp(cellWidth * 0.07, 0.75, 1.35);
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        cells.forEach((cell) => {
+          if (cell.cut) return;
+          const tuftCount = clamp(Math.floor(cellWidth / 10), 1, 4);
+          const baseY = layout.top + (cell.row + 0.8) * cellHeight;
+          for (let tuftIndex = 0; tuftIndex < tuftCount; tuftIndex += 1) {
+            const fraction = (tuftIndex + 1) / (tuftCount + 1);
+            const jitter = (((cell.index + 3) * (tuftIndex + 5) * 7) % 5 - 2) * cellWidth * 0.018;
+            const tuftX = lane.x + (cell.column + fraction) * cellWidth + jitter;
+            const heightScale = 0.68 + ((cell.tuft + tuftIndex) % 3) * 0.13;
+            const lean = cell.lean * clamp(cellWidth * 0.065, 0.45, 1.8);
+            ctx.moveTo(tuftX, baseY);
+            ctx.lineTo(tuftX + lean, baseY - tuftHeight * heightScale);
+          }
+        });
+        ctx.stroke();
+
+        ctx.strokeStyle = "rgba(177,255,112,.18)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        cells.forEach((cell) => {
+          if (!cell.cut) return;
+          const centerX = lane.x + (cell.column + 0.5) * cellWidth;
+          const baseY = layout.top + (cell.row + 0.68) * cellHeight;
+          const halfWidth = Math.min(4, cellWidth * 0.28);
+          ctx.moveTo(centerX - halfWidth, baseY);
+          ctx.lineTo(centerX + halfWidth, baseY);
+        });
+        ctx.stroke();
+
+        if (phase === "racing") {
+          const flashDuration = reducedMotion ? 0.08 : 0.32;
+          cells.forEach((cell) => {
+            if (cell.cutAt < 0) return;
+            const age = raceElapsed - cell.cutAt;
+            if (age < 0 || age > flashDuration) return;
+            ctx.globalAlpha = (1 - age / flashDuration) * (reducedMotion ? 0.28 : 0.58);
+            ctx.fillStyle = accent;
+            ctx.fillRect(
+              lane.x + cell.column * cellWidth,
+              layout.top + cell.row * cellHeight,
+              cellWidth + 0.5,
+              cellHeight + 0.5
+            );
+          });
+          ctx.globalAlpha = 1;
         }
         ctx.restore();
 
@@ -1150,11 +1455,61 @@
           ctx.fillStyle = index % 2 ? "#f8ffe8" : "#07140c";
           ctx.fillRect(lane.x + index * checker, layout.top + 5, checker + 0.5, 7);
         }
+
+        if (feedback.milestone.life > 0) {
+          const lifeRatio = clamp(feedback.milestone.life / feedback.milestone.maxLife, 0, 1);
+          const badgeWidth = Math.min(lane.width - 24, 132);
+          const badgeX = lane.x + (lane.width - badgeWidth) / 2;
+          const badgeY = layout.top + Math.max(42, layout.laneHeight * 0.22);
+          ctx.save();
+          ctx.globalAlpha = reducedMotion ? 0.82 : Math.min(1, lifeRatio * 1.65);
+          ctx.shadowColor = accent;
+          ctx.shadowBlur = 12 + feedback.milestone.tier * 4;
+          ctx.fillStyle = "rgba(3,17,9,.88)";
+          roundedRect(ctx, badgeX, badgeY, badgeWidth, 28, 8);
+          ctx.fill();
+          ctx.strokeStyle = accent;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = accent;
+          ctx.font = `900 ${lane.width < 250 ? 10 : 11}px Trebuchet MS`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(feedback.milestone.text, lane.x + lane.width / 2, badgeY + 14);
+          ctx.restore();
+        }
       }
 
-      function drawMower(center, lane, points, angle, stats, accent, label) {
+      function drawMower(center, lane, points, angle, stats, accent, label, feedback) {
         const radius = bladeRadius(lane, stats);
         const blade = transformedBlade(center, points, angle, radius);
+
+        if (!reducedMotion && feedback.energy > 0.025) {
+          ctx.save();
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.shadowColor = accent;
+          ctx.shadowBlur = 8;
+          [0.3, 0.16].forEach((offset, index) => {
+            const trail = transformedBlade(center, points, angle - offset, radius);
+            ctx.globalAlpha = feedback.energy * (index === 0 ? 0.12 : 0.2);
+            ctx.strokeStyle = accent;
+            ctx.lineWidth = clamp(lane.width * 0.013, 2.5, 6);
+            ctx.beginPath();
+            ctx.moveTo(trail[0].x, trail[0].y);
+            for (let pointIndex = 1; pointIndex < trail.length; pointIndex += 1) {
+              ctx.lineTo(trail[pointIndex].x, trail[pointIndex].y);
+            }
+            ctx.stroke();
+          });
+          ctx.globalAlpha = feedback.energy * 0.24;
+          ctx.lineWidth = clamp(lane.width * 0.008, 1.5, 3);
+          ctx.beginPath();
+          ctx.arc(center.x, center.y, radius * 0.78, angle - 1.25, angle + 0.35);
+          ctx.stroke();
+          ctx.restore();
+        }
 
         ctx.save();
         ctx.strokeStyle = accent;
@@ -1199,22 +1554,62 @@
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(label, center.x, center.y + 29);
+
+        if (!reducedMotion && feedback.chain >= 6 && feedback.chainWindow > 0) {
+          const chainAlpha = clamp(feedback.chainWindow / 0.22, 0, 1);
+          const chainY = center.y - 35 - (1 - chainAlpha) * 8;
+          ctx.save();
+          ctx.globalAlpha = chainAlpha;
+          ctx.fillStyle = "rgba(3,17,9,.86)";
+          roundedRect(ctx, center.x - 38, chainY - 9, 76, 18, 5);
+          ctx.fill();
+          ctx.fillStyle = accent;
+          ctx.font = "900 9px Trebuchet MS";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(`CUT CHAIN ×${feedback.chain}`, center.x, chainY);
+          ctx.restore();
+        }
       }
 
       function drawParticles() {
+        if (reducedMotion) return;
         particles.forEach((particle) => {
+          ctx.save();
+          ctx.translate(particle.x, particle.y);
+          ctx.rotate(particle.rotation);
           ctx.globalAlpha = clamp(particle.life / particle.maxLife, 0, 1);
           ctx.fillStyle = particle.color;
-          ctx.fillRect(particle.x - 2, particle.y - 4, 4, 8);
+          ctx.fillRect(-particle.width / 2, -particle.length / 2, particle.width, particle.length);
+          ctx.restore();
         });
-        ctx.globalAlpha = 1;
+      }
+
+      function drawFinalVignette() {
+        if (phase !== "racing") return;
+        const remaining = RACE_SECONDS - raceElapsed;
+        if (remaining <= 0 || remaining > 5) return;
+        const urgency = 1 - remaining / 5;
+        const pulse = reducedMotion ? 0.45 : 0.55 + Math.sin(raceElapsed * 9) * 0.2;
+        const gradient = ctx.createRadialGradient(
+          width / 2,
+          height / 2,
+          Math.min(width, height) * 0.18,
+          width / 2,
+          height / 2,
+          Math.max(width, height) * 0.68
+        );
+        gradient.addColorStop(0, "rgba(255,74,67,0)");
+        gradient.addColorStop(1, `rgba(255,74,67,${(0.025 + urgency * 0.055 * pulse).toFixed(3)})`);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
       }
 
       function render() {
         if (!layout) return;
         drawBackground();
-        drawLane(layout.playerLane, playerCells.length ? playerCells : makeCells(), "#c8ff55");
-        drawLane(layout.rivalLane, rivalCells.length ? rivalCells : makeCells(), "#ffb84d");
+        drawLane(layout.playerLane, playerCells.length ? playerCells : makeCells(), "#c8ff55", playerFeedback);
+        drawLane(layout.rivalLane, rivalCells.length ? rivalCells : makeCells(), "#ffb84d", rivalFeedback);
 
         ctx.fillStyle = "rgba(248,255,232,.58)";
         ctx.font = `900 ${height < 420 ? 9 : 11}px Trebuchet MS`;
@@ -1225,17 +1620,38 @@
         if (phase === "racing" || phase === "result") {
           const playerCenter = mowerPoint(layout.playerLane, playerProgress, playerX);
           const rivalCenter = mowerPoint(layout.rivalLane, rivalProgress, rivalX);
-          drawMower(playerCenter, layout.playerLane, normalizeBlade(), playerBladeAngle, playerBladeStats, "#c8ff55", "YOU");
-          drawMower(rivalCenter, layout.rivalLane, rivalBlade, rivalBladeAngle, rivalBladeStats, "#ffb84d", "RIVAL");
+          drawMower(playerCenter, layout.playerLane, playerRaceBlade, playerBladeAngle, playerBladeStats, "#c8ff55", "YOU", playerFeedback);
+          drawMower(rivalCenter, layout.rivalLane, rivalBlade, rivalBladeAngle, rivalBladeStats, "#ffb84d", "RIVAL", rivalFeedback);
         }
         drawParticles();
+        drawFinalVignette();
       }
 
       function animationLoop(now) {
-        const delta = Math.min((now - lastTime) / 1000, 0.04);
+        const delta = Math.min(Math.max((now - lastTime) / 1000, 0), 0.1);
         lastTime = now;
-        if (phase === "racing") updateRace(delta);
-        render();
+        if (phase === "racing") {
+          simulationAccumulator += delta;
+          let steps = 0;
+          while (
+            simulationAccumulator >= FIXED_STEP &&
+            phase === "racing" &&
+            steps < MAX_SIMULATION_STEPS
+          ) {
+            updateRace(FIXED_STEP);
+            simulationAccumulator -= FIXED_STEP;
+            steps += 1;
+          }
+          if (steps === MAX_SIMULATION_STEPS && simulationAccumulator >= FIXED_STEP) {
+            simulationAccumulator = 0;
+          }
+        } else {
+          simulationAccumulator = 0;
+        }
+        if (phase === "racing" || phase !== lastRenderedPhase) {
+          render();
+          lastRenderedPhase = phase;
+        }
         requestAnimationFrame(animationLoop);
       }
 
@@ -1271,6 +1687,20 @@
       pad.addEventListener("pointerup", finishDrawing);
       pad.addEventListener("pointercancel", finishDrawing);
       window.addEventListener("resize", resize, { passive: true });
+      document.addEventListener("visibilitychange", () => {
+        lastTime = performance.now();
+        simulationAccumulator = 0;
+      });
+
+      const syncReducedMotion = (event) => {
+        reducedMotion = event.matches;
+        if (reducedMotion) particles = [];
+      };
+      if (typeof motionQuery.addEventListener === "function") {
+        motionQuery.addEventListener("change", syncReducedMotion);
+      } else if (typeof motionQuery.addListener === "function") {
+        motionQuery.addListener(syncReducedMotion);
+      }
 
       startButton.addEventListener("click", startRace);
       clearButton.addEventListener("click", () => {
