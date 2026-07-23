@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Grass Cutter</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23c8ff55'/%3E%3Ccircle cx='32' cy='32' r='7' fill='%2306140c'/%3E%3C/svg%3E">
   <style>
     :root {
       color-scheme: dark;
@@ -117,7 +118,7 @@
       top: max(10px, env(safe-area-inset-top));
       left: 50%;
       display: grid;
-      grid-template-columns: minmax(88px, 1fr) auto minmax(88px, 1fr) auto;
+      grid-template-columns: minmax(88px, 1fr) auto minmax(98px, 0.72fr) minmax(88px, 1fr) auto;
       gap: 9px;
       align-items: center;
       width: min(720px, calc(100% - 24px));
@@ -135,6 +136,10 @@
       border-radius: 8px;
       box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
       backdrop-filter: blur(6px);
+    }
+
+    .score-card[hidden] {
+      display: none;
     }
 
     .score-card {
@@ -173,6 +178,14 @@
 
     .score-name.rival {
       color: var(--orange);
+    }
+
+    .score-name.uncut {
+      color: #e9ffd4;
+    }
+
+    .uncut-meter > span {
+      background: #d8ffab;
     }
 
     .meter {
@@ -257,6 +270,129 @@
     .control-hint.tied {
       color: var(--ink);
       border-color: rgba(248, 255, 232, 0.25);
+    }
+
+    .spawn-panel {
+      position: absolute;
+      z-index: 7;
+      left: 50%;
+      bottom: max(42px, calc(env(safe-area-inset-bottom) + 38px));
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      width: min(560px, calc(100% - 24px));
+      padding: 10px 12px;
+      color: var(--ink);
+      background: rgba(3, 17, 9, 0.94);
+      border: 1px solid rgba(200, 255, 85, 0.42);
+      border-radius: 11px;
+      box-shadow: 0 16px 42px rgba(0, 0, 0, 0.4), 0 0 28px rgba(200, 255, 85, 0.08);
+      backdrop-filter: blur(8px);
+      transform: translateX(-50%);
+    }
+
+    .spawn-panel[hidden] {
+      display: none;
+    }
+
+    .spawn-clock {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      color: var(--night);
+      background: var(--lime);
+      border-radius: 50%;
+      font-size: 1rem;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .spawn-copy {
+      min-width: 0;
+    }
+
+    .spawn-copy strong,
+    .spawn-copy span {
+      display: block;
+    }
+
+    .spawn-copy h2 {
+      color: var(--lime);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    #spawn-slider {
+      position: absolute;
+      z-index: 6;
+      width: 46px;
+      margin: 0;
+      appearance: none;
+      -webkit-appearance: none;
+      writing-mode: vertical-lr;
+      direction: rtl;
+      background: transparent;
+      cursor: ns-resize;
+      touch-action: none;
+    }
+
+    #spawn-slider[hidden] {
+      display: none;
+    }
+
+    #spawn-slider::-webkit-slider-runnable-track {
+      width: 6px;
+      height: 100%;
+      background: rgba(200, 255, 85, 0.3);
+      border: 1px solid rgba(200, 255, 85, 0.68);
+      border-radius: 99px;
+    }
+
+    #spawn-slider::-webkit-slider-thumb {
+      width: 28px;
+      height: 28px;
+      margin-left: -12px;
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--lime);
+      border: 5px solid #07140c;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px var(--lime), 0 0 20px rgba(200, 255, 85, 0.55);
+    }
+
+    #spawn-slider::-moz-range-track {
+      width: 6px;
+      height: 100%;
+      background: rgba(200, 255, 85, 0.3);
+      border: 1px solid rgba(200, 255, 85, 0.68);
+      border-radius: 99px;
+    }
+
+    #spawn-slider::-moz-range-thumb {
+      width: 28px;
+      height: 28px;
+      background: var(--lime);
+      border: 5px solid #07140c;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px var(--lime), 0 0 20px rgba(200, 255, 85, 0.55);
+    }
+
+    .spawn-copy strong {
+      color: var(--lime);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .spawn-copy span {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.67rem;
+      line-height: 1.25;
     }
 
     @keyframes urgency-pulse {
@@ -418,7 +554,7 @@
 
     .result-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
       margin: 18px 0;
     }
@@ -482,14 +618,18 @@
     @media (max-width: 620px) {
       .hud {
         grid-template-columns: minmax(74px, 1fr) auto minmax(74px, 1fr);
+        grid-template-areas:
+          "player timer rival"
+          "uncut uncut feed";
       }
 
+      .player-card { grid-area: player; }
+      .timer { grid-area: timer; }
+      .uncut-card { grid-area: uncut; }
+      .rival-card { grid-area: rival; }
       .feed {
-        position: absolute;
-        top: 50px;
-        left: 50%;
+        grid-area: feed;
         min-height: 32px;
-        transform: translateX(-50%);
       }
 
       .score-card {
@@ -510,6 +650,15 @@
         max-width: calc(100% - 20px);
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .spawn-panel {
+        grid-template-columns: auto 1fr;
+      }
+
+      .spawn-panel button {
+        grid-column: 1 / -1;
+        width: 100%;
       }
     }
 
@@ -595,6 +744,7 @@
       }
 
       .result-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 6px;
       }
 
@@ -639,16 +789,21 @@
 </head>
 <body>
   <main class="game-shell" id="game-shell">
-    <canvas id="game-canvas" tabindex="-1" role="img" aria-label="Grass Cutter automatic race. The blade drawn before the start determines cutting performance."></canvas>
+    <canvas id="game-canvas" tabindex="0" role="img" aria-label="Grass Cutter lawn arena. Draw a blade, choose a starting position, and watch the automatic race."></canvas>
 
     <div class="hud" aria-label="Race status">
-      <div class="score-card">
+      <div class="score-card player-card">
         <span class="score-name player">You</span>
         <span class="meter"><span id="player-meter"></span></span>
         <span class="score-value" id="player-score">0.00%</span>
       </div>
       <div class="timer" id="timer">24s</div>
-      <div class="score-card">
+      <div class="score-card uncut-card">
+        <span class="score-name uncut">Uncut</span>
+        <span class="meter uncut-meter"><span id="uncut-meter"></span></span>
+        <span class="score-value" id="uncut-score">100.00%</span>
+      </div>
+      <div class="score-card rival-card" hidden aria-hidden="true">
         <span class="score-name rival">Rival</span>
         <span class="meter rival-meter"><span id="rival-meter"></span></span>
         <span class="score-value" id="rival-score">0.00%</span>
@@ -656,13 +811,15 @@
       <div class="feed" id="feed">🐾 0</div>
     </div>
 
-    <p class="control-hint" id="control-hint">Automatic race &bull; Your blade controls the result</p>
+    <p class="control-hint" id="control-hint">Shared arena &bull; First cut owns each grass tile</p>
+
+    <input id="spawn-slider" type="range" min="8" max="92" value="50" step="1" aria-label="Starting position on the left edge" aria-orientation="vertical" hidden>
 
     <section class="overlay" id="design-overlay" aria-labelledby="game-title">
       <div class="panel">
         <p class="kicker">Blade workshop</p>
         <h1 id="game-title">Grass Cutter</h1>
-        <p class="lede">Draw one blade below. Its span, balance, and flow decide how much grass your mower can clear.</p>
+        <p class="lede">Draw one blade, choose a safe start on the left edge, then claim as much of the lawn as you can.</p>
         <div class="draw-wrap">
           <canvas id="blade-pad" width="560" height="180" aria-label="Blade drawing area"></canvas>
           <span class="draw-label">Draw your blade</span>
@@ -676,9 +833,18 @@
         <div class="actions">
           <button class="secondary" id="clear-blade" type="button">Clear Blade</button>
           <button class="secondary" id="starter-blade" type="button">Use Starter</button>
-          <button id="start-race" type="button">Start Race</button>
+          <button id="start-race" type="button">Choose Start</button>
         </div>
       </div>
+    </section>
+
+    <section class="spawn-panel" id="spawn-panel" aria-label="Choose your starting position" hidden>
+      <div class="spawn-clock" id="spawn-clock" aria-label="Seconds remaining">10</div>
+      <div class="spawn-copy">
+        <h2>Choose your start</h2>
+        <span>Tap or drag along the left edge. Use arrow keys to adjust.</span>
+      </div>
+      <button id="lock-start" type="button">Lock Start</button>
     </section>
 
     <section class="overlay" id="result-overlay" aria-labelledby="result-title" hidden>
@@ -686,8 +852,9 @@
         <p class="kicker" id="result-kicker">Race complete</p>
         <h2 id="result-title">Lawn Cleared</h2>
         <div class="result-grid">
-          <div class="result-card"><span>Your lawn</span><strong id="result-player">0.00%</strong></div>
-          <div class="result-card"><span>Rival lawn</span><strong id="result-rival">0.00%</strong></div>
+          <div class="result-card"><span>Your share</span><strong id="result-player">0.00%</strong></div>
+          <div class="result-card"><span>Rival share</span><strong id="result-rival">0.00%</strong></div>
+          <div class="result-card"><span>Uncut</span><strong id="result-uncut">100.00%</strong></div>
           <div class="result-card"><span>Blade rating</span><strong id="result-blade">0</strong></div>
         </div>
         <p class="pet-message" id="pet-message"><strong>🐶 Your pet is waiting.</strong></p>
@@ -706,6 +873,15 @@
     (() => {
       "use strict";
 
+      const bootstrapOptions = new URLSearchParams(window.location.search);
+      if (bootstrapOptions.get("raceMode") === "classic") {
+        const classicUrl = new URL("game-classic.html", window.location.href);
+        classicUrl.search = window.location.search;
+        classicUrl.hash = window.location.hash;
+        window.location.replace(classicUrl.href);
+        return;
+      }
+
       const shell = document.getElementById("game-shell");
       const canvas = document.getElementById("game-canvas");
       const ctx = canvas.getContext("2d", { alpha: false });
@@ -713,15 +889,22 @@
       const padCtx = pad.getContext("2d");
       const designOverlay = document.getElementById("design-overlay");
       const resultOverlay = document.getElementById("result-overlay");
+      const spawnPanel = document.getElementById("spawn-panel");
+      const spawnClock = document.getElementById("spawn-clock");
+      const spawnSlider = document.getElementById("spawn-slider");
+      const lockStartButton = document.getElementById("lock-start");
       const startButton = document.getElementById("start-race");
       const clearButton = document.getElementById("clear-blade");
       const starterButton = document.getElementById("starter-blade");
       const againButton = document.getElementById("race-again");
       const newBladeButton = document.getElementById("new-blade");
+      const rivalCard = document.querySelector(".rival-card");
       const playerMeter = document.getElementById("player-meter");
       const rivalMeter = document.getElementById("rival-meter");
+      const uncutMeter = document.getElementById("uncut-meter");
       const playerScoreText = document.getElementById("player-score");
       const rivalScoreText = document.getElementById("rival-score");
+      const uncutScoreText = document.getElementById("uncut-score");
       const timerText = document.getElementById("timer");
       const feedText = document.getElementById("feed");
       const controlHint = document.getElementById("control-hint");
@@ -729,107 +912,102 @@
       const resultKicker = document.getElementById("result-kicker");
       const resultPlayer = document.getElementById("result-player");
       const resultRival = document.getElementById("result-rival");
+      const resultUncut = document.getElementById("result-uncut");
+      const resultBlade = document.getElementById("result-blade");
+      const resultMeta = document.getElementById("result-meta");
       const petMessage = document.getElementById("pet-message");
       const announcement = document.getElementById("race-announcement");
       const bladeSpanText = document.getElementById("blade-span");
       const bladeBalanceText = document.getElementById("blade-balance");
       const bladeFlowText = document.getElementById("blade-flow");
       const bladeRatingText = document.getElementById("blade-rating");
-      const resultBlade = document.getElementById("result-blade");
-      const resultMeta = document.getElementById("result-meta");
 
-      const RACE_SECONDS = 24;
-      const COLS = 16;
-      const ROWS = 32;
-      const FIXED_STEP = 1 / 60;
-      const MAX_SIMULATION_STEPS = 6;
-      const TOTAL_RACE_TICKS = Math.round(RACE_SECONDS / FIXED_STEP);
-      const MILESTONES = [0.25, 0.5, 0.75];
-      const EVENT_TIMES = [6.2, 10.2, 14.2, 18.2];
-      const EVENT_TELEGRAPH_SECONDS = 0.8;
-      const EVENT_DURATION_SECONDS = 1.6;
-      const CLEAN_FINISH_START = 21;
-      const URL_OPTIONS = new URLSearchParams(window.location.search);
-      const CLASSIC_MODE = URL_OPTIONS.get("raceMode") === "classic";
-      const REQUESTED_SEED = URL_OPTIONS.has("seed")
-        ? Number.parseInt(URL_OPTIONS.get("seed"), 10) >>> 0
+      const OPTIONS = new URLSearchParams(window.location.search);
+      const CLASSIC_MODE = OPTIONS.get("raceMode") === "classic";
+      const TEST_MODE = OPTIONS.get("test") === "1";
+      const MANUAL_MODE = TEST_MODE && OPTIONS.get("manual") === "1";
+      const REQUESTED_SEED = OPTIONS.has("seed")
+        ? Number.parseInt(OPTIONS.get("seed"), 10) >>> 0
         : null;
-      const UNCUT_SHADES = ["#2d9848", "#319d4b", "#35a14e", "#2f9a49"];
-      const CUT_SHADES = ["#153f24", "#174527", "#194a29", "#164325"];
-      const NEUTRAL_CONDITION = Object.freeze({
-        id: "calm", name: "CALM TURF", icon: "•", cut: 1, spin: 1, bias: 0, color: "#dfffc0"
+      const WORLD_COLS = 40;
+      const WORLD_ROWS = 26;
+      const TOTAL_CELLS = WORLD_COLS * WORLD_ROWS;
+      const WORLD_WIDTH = WORLD_COLS;
+      const WORLD_HEIGHT = WORLD_ROWS;
+      const STEP_MS = 1000 / 60;
+      const SETUP_TICKS = 10 * 60;
+      const COUNTDOWN_TICKS = 3 * 60;
+      const RACE_TICKS = 24 * 60;
+      const RACE_SECONDS = 24;
+      const SAFE_SPAWN_MIN = 0.08;
+      const SAFE_SPAWN_MAX = 0.92;
+      const BODY_RADIUS = 0.72;
+      const COLLISION_SLOW_TICKS = 36;
+      const COLLISION_COOLDOWN_TICKS = 60;
+      const EVENT_TELEGRAPH_TICKS = 48;
+      const EVENT_START_TICKS = [372, 612, 852, 1092];
+      const EVENT_DURATION_TICKS = 96;
+      const CLEAN_FINISH_TICK = 21 * 60;
+      const OWNER_COLORS = ["#45b85a", "#174e2b", "#8b5122"];
+      const EVENT_INFO = Object.freeze({
+        dry: Object.freeze({ id: "dry", label: "DRY PATCH", color: "#ffe071", speed: 1, cut: 1.08, turn: 1 }),
+        dew: Object.freeze({ id: "dew", label: "FRESH DEW", color: "#7ddcff", speed: 1, cut: 0.92, turn: 1 }),
+        tailwind: Object.freeze({ id: "tailwind", label: "TAILWIND", color: "#9df7d1", speed: 1, cut: 1, turn: 1.12 }),
+        crosswind: Object.freeze({ id: "crosswind", label: "CROSSWIND", color: "#dbbaff", speed: 1, cut: 1, turn: 1 })
       });
-      const EVENT_DEFINITIONS = Object.freeze({
-        tailwind: Object.freeze({ id: "tailwind", name: "TAILWIND", icon: "➜", cut: 1, spin: 1.08, bias: 0, color: "#8eeeff" }),
-        dry: Object.freeze({ id: "dry", name: "DRY STRIP", icon: "☀", cut: 1.04, spin: 1.05, bias: 0, color: "#ffe07a" }),
-        dew: Object.freeze({ id: "dew", name: "FRESH DEW", icon: "◇", cut: 0.92, spin: 0.95, bias: 0, color: "#75d8ff" }),
-        crosswind: Object.freeze({ id: "crosswind", name: "CROSSWIND", icon: "↝", cut: 1, spin: 1, bias: 0.055, color: "#d9b7ff" })
-      });
-      const RIVAL_TEMPLATES = Object.freeze([
-        Object.freeze({ name: "Pocket", points: [{ x: -0.72, y: 0 }, { x: 0, y: -0.18 }, { x: 0.72, y: 0.04 }], stats: { span: 0.32, balance: 0.55, flow: 0.62, rating: 45, label: "Weak" } }),
-        Object.freeze({ name: "Hook", points: [{ x: -0.82, y: 0.14 }, { x: -0.18, y: -0.34 }, { x: 0.5, y: 0.22 }, { x: 0.82, y: -0.03 }], stats: { span: 0.45, balance: 0.68, flow: 0.55, rating: 54, label: "Steady" } }),
-        Object.freeze({ name: "Comet", points: [{ x: -0.9, y: 0.08 }, { x: -0.3, y: -0.22 }, { x: 0.3, y: 0.2 }, { x: 0.9, y: -0.05 }], stats: { span: 0.55, balance: 0.72, flow: 0.7, rating: 63, label: "Steady" } }),
-        Object.freeze({ name: "Ridge", points: [{ x: -0.95, y: 0.05 }, { x: -0.38, y: -0.34 }, { x: 0.12, y: 0.28 }, { x: 0.95, y: -0.08 }], stats: { span: 0.66, balance: 0.78, flow: 0.76, rating: 71, label: "Strong" } }),
-        Object.freeze({ name: "Falcon", points: [{ x: -1, y: 0.08 }, { x: -0.45, y: -0.25 }, { x: 0.1, y: 0.18 }, { x: 0.55, y: -0.16 }, { x: 1, y: 0.02 }], stats: { span: 0.76, balance: 0.78, flow: 0.71, rating: 76, label: "Strong" } }),
-        Object.freeze({ name: "Cyclone", points: [{ x: -1, y: 0 }, { x: -0.5, y: -0.18 }, { x: 0, y: 0.12 }, { x: 0.5, y: -0.14 }, { x: 1, y: 0 }], stats: { span: 0.82, balance: 0.86, flow: 0.85, rating: 84, label: "Strong" } }),
-        Object.freeze({ name: "Vortex", points: [{ x: -1, y: 0.02 }, { x: -0.55, y: -0.12 }, { x: 0, y: 0.08 }, { x: 0.55, y: -0.1 }, { x: 1, y: 0 }], stats: { span: 0.95, balance: 0.94, flow: 0.9, rating: 94, label: "Elite" } }),
-        Object.freeze({ name: "Apex", points: [{ x: -1, y: 0 }, { x: -0.62, y: -0.08 }, { x: -0.18, y: 0.05 }, { x: 0.28, y: -0.05 }, { x: 0.65, y: 0.07 }, { x: 1, y: 0 }], stats: { span: 1, balance: 0.98, flow: 0.98, rating: 99, label: "Elite" } })
+      const CALM = Object.freeze({ id: "calm", label: "CALM", color: "#dfffc0", speed: 1, cut: 1, turn: 1 });
+      const RIVALS = Object.freeze([
+        Object.freeze({ name: "Pocket", rating: 44, span: 0.38, balance: 0.62, flow: 0.66, points: [{ x: -1, y: 0 }, { x: 0, y: -0.16 }, { x: 1, y: 0 }] }),
+        Object.freeze({ name: "Comet", rating: 61, span: 0.6, balance: 0.74, flow: 0.72, points: [{ x: -1, y: 0.08 }, { x: -0.32, y: -0.25 }, { x: 0.32, y: 0.2 }, { x: 1, y: -0.04 }] }),
+        Object.freeze({ name: "Ridge", rating: 73, span: 0.72, balance: 0.81, flow: 0.78, points: [{ x: -1, y: 0.03 }, { x: -0.45, y: -0.28 }, { x: 0.12, y: 0.23 }, { x: 1, y: -0.05 }] }),
+        Object.freeze({ name: "Cyclone", rating: 85, span: 0.86, balance: 0.9, flow: 0.87, points: [{ x: -1, y: 0 }, { x: -0.5, y: -0.16 }, { x: 0, y: 0.12 }, { x: 0.5, y: -0.12 }, { x: 1, y: 0 }] }),
+        Object.freeze({ name: "Apex", rating: 96, span: 1, balance: 0.97, flow: 0.96, points: [{ x: -1, y: 0 }, { x: -0.55, y: -0.08 }, { x: 0, y: 0.06 }, { x: 0.55, y: -0.06 }, { x: 1, y: 0 }] })
       ]);
 
-      let rivalBlade = RIVAL_TEMPLATES[3].points;
-      let rivalBladeStats = RIVAL_TEMPLATES[3].stats;
-
-      let width = 0;
-      let height = 0;
+      let viewportWidth = 0;
+      let viewportHeight = 0;
       let dpr = 1;
       let layout = null;
       let phase = "design";
       let bladePoints = [];
       let drawing = false;
       let drawingPointer = null;
-      let playerCells = [];
-      let rivalCells = [];
-      let particles = [];
-      let raceElapsed = 0;
+      let playerBlade = [{ x: -1, y: 0 }, { x: 1, y: 0 }];
+      let playerStats = { span: 0, balance: 0, flow: 0, rating: 0, label: "Draw" };
+      let rival = RIVALS[2];
+      let owners = new Uint8Array(TOTAL_CELLS);
+      let cutAt = new Int16Array(TOTAL_CELLS).fill(-1);
+      let counts = { you: 0, rival: 0, uncut: TOTAL_CELLS };
+      let setupTick = 0;
+      let countdownTick = 0;
       let raceTick = 0;
-      let lastTime = performance.now();
-      let simulationAccumulator = 0;
-      let playerProgress = 0;
-      let rivalProgress = 0;
-      let playerX = 0.5;
-      let rivalX = 0.5;
-      let playerScore = 0;
-      let rivalScore = 0;
-      let playerCutCount = 0;
-      let rivalCutCount = 0;
-      let playerBladeAngle = 0;
-      let rivalBladeAngle = 0;
-      let playerBladeStats = { span: 0, balance: 0, flow: 0, rating: 0, label: "Draw" };
-      let playerRaceBlade = [{ x: -1, y: 0 }, { x: 1, y: 0 }];
-      let playerFeedback = createLaneFeedback();
-      let rivalFeedback = createLaneFeedback();
+      let frameAccumulatorMs = 0;
+      let lastFrameTime = performance.now();
+      let spawnRatio = 0.5;
+      let spawnMinimum = SAFE_SPAWN_MIN;
+      let spawnChosen = false;
+      let spawnLocked = false;
+      let rivalRevealed = false;
+      let playerMower = null;
+      let rivalMower = null;
       let raceSeed = 0;
-      let raceRandom = null;
-      let playerEvents = [];
-      let rivalEvents = [];
-      let playerEventState = { phase: "idle", event: NEUTRAL_CONDITION, remaining: 0 };
-      let rivalEventState = { phase: "idle", event: NEUTRAL_CONDITION, remaining: 0 };
-      let matchupLabel = "EVEN MATCH";
-      let matchupLife = 0;
-      let lastLeader = 0;
-      let leadChangeCount = 0;
-      let leadChangeLife = 0;
-      let lastLeadChangeAt = -10;
-      let debugTimeline = [];
-      let nextDebugSecond = 1;
-      let halfwayAnnounced = false;
-      let finalFiveAnnounced = false;
-      let lastHudKey = "";
-      let lastFeedValue = null;
-      let lastRenderedPhase = "";
-      const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-      let reducedMotion = motionQuery.matches;
+      let eventZones = [];
+      let collisionCount = 0;
+      let collisionFlashTicks = 0;
+      let lastCollisionTick = -1;
+      let lead = 0;
+      let leadChanges = 0;
+      let leadFlashTicks = 0;
+      let lastNonTieLead = 0;
       let feed = readFeed();
+      let raceRewarded = false;
+      let dragSpawn = false;
+      const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+      let reducedMotion = reducedMotionQuery.matches;
+
+      function clamp(value, minimum, maximum) {
+        return Math.max(minimum, Math.min(maximum, value));
+      }
 
       function readFeed() {
         try {
@@ -843,12 +1021,8 @@
         try {
           localStorage.setItem("grass-cutter-feed", String(feed));
         } catch (error) {
-          // The game remains fully playable when storage is unavailable.
+          // Storage is optional; gameplay remains available.
         }
-      }
-
-      function clamp(value, minimum, maximum) {
-        return Math.max(minimum, Math.min(maximum, value));
       }
 
       function mulberry32(seed) {
@@ -862,206 +1036,140 @@
         };
       }
 
-      function randomRaceSeed() {
+      function seededNoise(seed, a, b, c = 0) {
+        let value = (seed ^ Math.imul(a + 1, 0x9E3779B1) ^ Math.imul(b + 3, 0x85EBCA77) ^ Math.imul(c + 7, 0xC2B2AE3D)) >>> 0;
+        value ^= value >>> 16;
+        value = Math.imul(value, 0x7FEB352D);
+        value ^= value >>> 15;
+        value = Math.imul(value, 0x846CA68B);
+        value ^= value >>> 16;
+        return (value >>> 0) / 4294967295;
+      }
+
+      function newRaceSeed() {
         if (REQUESTED_SEED !== null && Number.isFinite(REQUESTED_SEED)) return REQUESTED_SEED;
         if (window.crypto && typeof window.crypto.getRandomValues === "function") {
-          const seedBuffer = new Uint32Array(1);
-          window.crypto.getRandomValues(seedBuffer);
-          return seedBuffer[0] >>> 0;
+          const values = new Uint32Array(1);
+          window.crypto.getRandomValues(values);
+          return values[0] >>> 0;
         }
         return (Date.now() ^ Math.floor(performance.now() * 1000)) >>> 0;
       }
 
       function shuffled(values, random) {
-        const result = values.slice();
-        for (let index = result.length - 1; index > 0; index -= 1) {
-          const swapIndex = Math.floor(random() * (index + 1));
-          [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
+        const copy = values.slice();
+        for (let index = copy.length - 1; index > 0; index -= 1) {
+          const other = Math.floor(random() * (index + 1));
+          [copy[index], copy[other]] = [copy[other], copy[index]];
         }
-        return result;
+        return copy;
       }
 
-      function chooseRival(random) {
-        if (CLASSIC_MODE) return RIVAL_TEMPLATES[3];
-        const roll = random();
-        let offset;
-        if (roll < 0.1) offset = -16 + Math.floor(random() * 8);
-        else if (roll > 0.9) offset = 9 + Math.floor(random() * 8);
-        else offset = -8 + Math.floor(random() * 17);
-        const target = clamp(playerBladeStats.rating + offset, 40, 99);
-        return RIVAL_TEMPLATES.reduce((best, template) => (
-          Math.abs(template.stats.rating - target) < Math.abs(best.stats.rating - target) ? template : best
-        ), RIVAL_TEMPLATES[0]);
-      }
-
-      function describeMatchup(playerRating, rivalRating) {
-        const difference = rivalRating - playerRating;
-        if (difference >= 9) return "TOUGH RIVAL";
-        if (difference <= -9) return "FAVORABLE MATCH";
-        return "EVEN MATCH";
-      }
-
-      function buildEventDeck(random, laneName) {
-        if (CLASSIC_MODE) return [];
-        const ids = shuffled(["tailwind", "dry", "dew", "crosswind"], random);
-        return EVENT_TIMES.map((start, index) => {
-          const definition = EVENT_DEFINITIONS[ids[index]];
-          const direction = definition.id === "crosswind" ? (random() < 0.5 ? -1 : 1) : 0;
-          return {
-            ...definition,
-            lane: laneName,
-            start,
-            end: Math.min(CLEAN_FINISH_START, start + EVENT_DURATION_SECONDS),
-            bias: definition.bias * direction
-          };
-        });
-      }
-
-      function createRaceScript() {
-        raceSeed = randomRaceSeed();
-        raceRandom = mulberry32(raceSeed);
-        const rival = chooseRival(raceRandom);
-        rivalBlade = rival.points;
-        rivalBladeStats = rival.stats;
-        matchupLabel = describeMatchup(playerBladeStats.rating, rivalBladeStats.rating);
-        playerEvents = buildEventDeck(raceRandom, "player");
-        rivalEvents = buildEventDeck(raceRandom, "rival");
-        if (
-          playerEvents.length &&
-          playerEvents.every((event, index) => event.id === rivalEvents[index].id)
-        ) {
-          rivalEvents.push(rivalEvents.shift());
-          rivalEvents.forEach((event, index) => {
-            event.start = EVENT_TIMES[index];
-            event.end = Math.min(CLEAN_FINISH_START, event.start + EVENT_DURATION_SECONDS);
-          });
-        }
-      }
-
-      function eventStateAt(events, elapsed) {
-        if (CLASSIC_MODE || elapsed >= CLEAN_FINISH_START) {
-          return { phase: "idle", event: NEUTRAL_CONDITION, remaining: 0 };
-        }
-        for (const event of events) {
-          if (elapsed >= event.start && elapsed < event.end) {
-            return { phase: "active", event, remaining: event.end - elapsed };
-          }
-          if (elapsed >= event.start - EVENT_TELEGRAPH_SECONDS && elapsed < event.start) {
-            return { phase: "telegraph", event, remaining: event.start - elapsed };
-          }
-        }
-        return { phase: "idle", event: NEUTRAL_CONDITION, remaining: 0 };
-      }
-
-      function activeCondition(state) {
-        return state.phase === "active" ? state.event : NEUTRAL_CONDITION;
-      }
-
-      function createLaneFeedback() {
-        return {
-          energy: 0,
-          chain: 0,
-          chainWindow: 0,
-          milestone: { nextIndex: 0, text: "", life: 0, maxLife: 0.75, tier: 0 }
-        };
-      }
-
-      function roundedRect(context, x, y, w, h, radius) {
-        const r = Math.min(radius, w / 2, h / 2);
+      function roundedRect(context, x, y, width, height, radius) {
+        const safeRadius = Math.min(radius, width / 2, height / 2);
         context.beginPath();
-        context.moveTo(x + r, y);
-        context.arcTo(x + w, y, x + w, y + h, r);
-        context.arcTo(x + w, y + h, x, y + h, r);
-        context.arcTo(x, y + h, x, y, r);
-        context.arcTo(x, y, x + w, y, r);
+        context.moveTo(x + safeRadius, y);
+        context.arcTo(x + width, y, x + width, y + height, safeRadius);
+        context.arcTo(x + width, y + height, x, y + height, safeRadius);
+        context.arcTo(x, y + height, x, y, safeRadius);
+        context.arcTo(x, y, x + width, y, safeRadius);
         context.closePath();
       }
 
-      function makeCells() {
-        return Array.from({ length: ROWS * COLS }, (_, index) => ({
-          index,
-          column: index % COLS,
-          row: Math.floor(index / COLS),
-          cut: false,
-          cutAt: -1,
-          shade: (index * 17 + Math.floor(index / COLS) * 11) % UNCUT_SHADES.length,
-          tuft: (index * 13 + Math.floor(index / COLS) * 7) % 3,
-          lean: (((index * 29) % 9) - 4) / 4
-        }));
-      }
-
-      function buildLayout() {
-        const side = clamp(width * 0.025, 9, 26);
-        const gap = clamp(width * 0.018, 8, 18);
-        const top = height < 420 ? 60 : 68;
-        const bottom = height < 420 ? height - 27 : height - 40;
-        const laneWidth = (width - side * 2 - gap) / 2;
-        return {
-          side,
-          gap,
-          top,
-          bottom,
-          laneHeight: Math.max(120, bottom - top),
-          laneWidth,
-          playerLane: { x: side, width: laneWidth },
-          rivalLane: { x: side + laneWidth + gap, width: laneWidth }
-        };
-      }
-
-      function resize() {
-        const rect = shell.getBoundingClientRect();
-        width = Math.max(280, rect.width);
-        height = Math.max(280, rect.height);
-        dpr = Math.min(window.devicePixelRatio || 1, 2);
-        canvas.width = Math.round(width * dpr);
-        canvas.height = Math.round(height * dpr);
-        canvas.style.width = `${width}px`;
-        canvas.style.height = `${height}px`;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        layout = buildLayout();
-        render();
-      }
-
       function drawPadGrid() {
-        const w = pad.width;
-        const h = pad.height;
-        padCtx.clearRect(0, 0, w, h);
         padCtx.fillStyle = "#07180e";
-        padCtx.fillRect(0, 0, w, h);
+        padCtx.fillRect(0, 0, pad.width, pad.height);
         padCtx.strokeStyle = "rgba(200,255,85,.08)";
         padCtx.lineWidth = 1;
-        for (let x = 0; x <= w; x += 28) {
+        for (let x = 0; x <= pad.width; x += 28) {
           padCtx.beginPath();
           padCtx.moveTo(x, 0);
-          padCtx.lineTo(x, h);
+          padCtx.lineTo(x, pad.height);
           padCtx.stroke();
         }
-        for (let y = 0; y <= h; y += 28) {
+        for (let y = 0; y <= pad.height; y += 28) {
           padCtx.beginPath();
           padCtx.moveTo(0, y);
-          padCtx.lineTo(w, y);
+          padCtx.lineTo(pad.width, y);
           padCtx.stroke();
         }
-        padCtx.strokeStyle = "rgba(248,255,232,.15)";
-        padCtx.setLineDash([6, 7]);
-        padCtx.beginPath();
-        padCtx.moveTo(w / 2, 16);
-        padCtx.lineTo(w / 2, h - 16);
-        padCtx.stroke();
-        padCtx.setLineDash([]);
+      }
+
+      function analyzeBlade(points) {
+        if (points.length < 2) return { span: 0, balance: 0, flow: 0, rating: 0, label: "Draw" };
+        let minimumX = Infinity;
+        let maximumX = -Infinity;
+        points.forEach((point) => {
+          minimumX = Math.min(minimumX, point.x);
+          maximumX = Math.max(maximumX, point.x);
+        });
+        const centerX = (minimumX + maximumX) / 2;
+        let pathLength = 0;
+        let leftLength = 0;
+        let rightLength = 0;
+        for (let index = 1; index < points.length; index += 1) {
+          const previous = points[index - 1];
+          const current = points[index];
+          const segmentLength = Math.hypot(current.x - previous.x, current.y - previous.y);
+          pathLength += segmentLength;
+          if ((current.x + previous.x) / 2 < centerX) leftLength += segmentLength;
+          else rightLength += segmentLength;
+        }
+        const directLength = Math.hypot(
+          points[points.length - 1].x - points[0].x,
+          points[points.length - 1].y - points[0].y
+        );
+        const span = clamp(((maximumX - minimumX) / pad.width) / 0.75, 0, 1);
+        const balance = pathLength ? clamp(1 - Math.abs(leftLength - rightLength) / pathLength, 0, 1) : 0;
+        const flow = pathLength ? clamp(directLength / pathLength, 0, 1) : 0;
+        const rating = Math.round((span * 0.5 + balance * 0.3 + flow * 0.2) * 100);
+        const label = rating >= 85 ? "Elite" : rating >= 70 ? "Strong" : rating >= 50 ? "Steady" : "Weak";
+        return { span, balance, flow, rating, label };
+      }
+
+      function normalizeBlade(points) {
+        if (points.length < 2) return [{ x: -1, y: 0 }, { x: 1, y: 0 }];
+        let minimumX = Infinity;
+        let maximumX = -Infinity;
+        let minimumY = Infinity;
+        let maximumY = -Infinity;
+        points.forEach((point) => {
+          minimumX = Math.min(minimumX, point.x);
+          maximumX = Math.max(maximumX, point.x);
+          minimumY = Math.min(minimumY, point.y);
+          maximumY = Math.max(maximumY, point.y);
+        });
+        const centerX = (minimumX + maximumX) / 2;
+        const centerY = (minimumY + maximumY) / 2;
+        const scale = Math.max(maximumX - minimumX, maximumY - minimumY, 1) / 2;
+        const stride = Math.max(1, Math.floor(points.length / 24));
+        return points
+          .filter((_, index) => index % stride === 0 || index === points.length - 1)
+          .map((point) => ({
+            x: clamp((point.x - centerX) / scale, -1, 1),
+            y: clamp((point.y - centerY) / scale, -1, 1)
+          }));
+      }
+
+      function updateBladeDisplay() {
+        const stats = analyzeBlade(bladePoints);
+        bladeSpanText.textContent = `${Math.round(stats.span * 100)}%`;
+        bladeBalanceText.textContent = `${Math.round(stats.balance * 100)}%`;
+        bladeFlowText.textContent = `${Math.round(stats.flow * 100)}%`;
+        bladeRatingText.textContent = stats.rating ? `${stats.label} ${stats.rating}` : "Draw";
       }
 
       function drawBladeOnPad() {
         drawPadGrid();
-        updateBladeStats();
+        updateBladeDisplay();
         if (bladePoints.length < 2) return;
         padCtx.save();
+        padCtx.strokeStyle = "#c8ff55";
+        padCtx.lineWidth = 8;
         padCtx.lineCap = "round";
         padCtx.lineJoin = "round";
         padCtx.shadowColor = "rgba(200,255,85,.65)";
-        padCtx.shadowBlur = 12;
-        padCtx.strokeStyle = "#c8ff55";
-        padCtx.lineWidth = 8;
+        padCtx.shadowBlur = reducedMotion ? 0 : 12;
         padCtx.beginPath();
         padCtx.moveTo(bladePoints[0].x, bladePoints[0].y);
         for (let index = 1; index < bladePoints.length; index += 1) {
@@ -1071,910 +1179,1124 @@
         padCtx.restore();
       }
 
-      function padPoint(event) {
-        const rect = pad.getBoundingClientRect();
-        return {
-          x: clamp((event.clientX - rect.left) * pad.width / rect.width, 0, pad.width),
-          y: clamp((event.clientY - rect.top) * pad.height / rect.height, 0, pad.height)
-        };
-      }
-
       function useStarterBlade() {
         bladePoints = [];
-        const count = 28;
-        for (let index = 0; index < count; index += 1) {
-          const t = index / (count - 1);
+        for (let index = 0; index < 28; index += 1) {
+          const ratio = index / 27;
           bladePoints.push({
-            x: 68 + t * (pad.width - 136),
-            y: pad.height * 0.5 + Math.sin(t * Math.PI * 2.2) * pad.height * 0.22
+            x: 68 + ratio * (pad.width - 136),
+            y: pad.height * 0.5 + Math.sin(ratio * Math.PI * 2.2) * pad.height * 0.22
           });
         }
         startButton.disabled = false;
         drawBladeOnPad();
-        startButton.focus({ preventScroll: true });
+        return analyzeBlade(bladePoints);
       }
 
-      function analyzeBlade(points) {
-        if (points.length < 2) {
-          return { span: 0, balance: 0, flow: 0, rating: 0, label: "Draw" };
-        }
+      function setBladePreset(name) {
+        if (name === "strong") return useStarterBlade();
+        if (name !== "weak") throw new Error("Unknown blade preset");
+        bladePoints = [
+          { x: 238, y: 89 },
+          { x: 254, y: 55 },
+          { x: 246, y: 128 },
+          { x: 266, y: 69 },
+          { x: 279, y: 93 }
+        ];
+        startButton.disabled = false;
+        drawBladeOnPad();
+        return analyzeBlade(bladePoints);
+      }
 
-        let minX = Infinity;
-        let maxX = -Infinity;
-        points.forEach((point) => {
-          minX = Math.min(minX, point.x);
-          maxX = Math.max(maxX, point.x);
+      function padPoint(event) {
+        const bounds = pad.getBoundingClientRect();
+        return {
+          x: clamp((event.clientX - bounds.left) * pad.width / bounds.width, 0, pad.width),
+          y: clamp((event.clientY - bounds.top) * pad.height / bounds.height, 0, pad.height)
+        };
+      }
+
+      function chooseRival(random) {
+        const desired = clamp(playerStats.rating + Math.floor(random() * 19) - 9, 40, 96);
+        return RIVALS.reduce((best, candidate) => (
+          Math.abs(candidate.rating - desired) < Math.abs(best.rating - desired) ? candidate : best
+        ), RIVALS[0]);
+      }
+
+      function buildEventZones(random) {
+        const ids = shuffled(["dry", "dew", "tailwind", "crosswind"], random);
+        return ids.map((id, index) => {
+          const width = 7 + Math.floor(random() * 4);
+          const height = 5 + Math.floor(random() * 4);
+          const x = 6 + Math.floor(random() * (WORLD_COLS - width - 12));
+          const y = 2 + Math.floor(random() * (WORLD_ROWS - height - 4));
+          const startTick = EVENT_START_TICKS[index];
+          return {
+            ...EVENT_INFO[id],
+            x,
+            y,
+            width,
+            height,
+            startTick,
+            endTick: Math.min(CLEAN_FINISH_TICK, startTick + EVENT_DURATION_TICKS),
+            crosswindSign: random() < 0.5 ? -1 : 1
+          };
         });
-
-        const centerX = (minX + maxX) / 2;
-        let pathLength = 0;
-        let leftLength = 0;
-        let rightLength = 0;
-
-        for (let index = 1; index < points.length; index += 1) {
-          const previous = points[index - 1];
-          const current = points[index];
-          const segmentLength = Math.hypot(current.x - previous.x, current.y - previous.y);
-          const segmentCenter = (current.x + previous.x) / 2;
-          pathLength += segmentLength;
-          if (segmentCenter < centerX) leftLength += segmentLength;
-          else rightLength += segmentLength;
-        }
-
-        const directLength = Math.hypot(
-          points[points.length - 1].x - points[0].x,
-          points[points.length - 1].y - points[0].y
-        );
-        const span = clamp(((maxX - minX) / pad.width) / 0.75, 0, 1);
-        const balance = pathLength > 0
-          ? clamp(1 - Math.abs(leftLength - rightLength) / pathLength, 0, 1)
-          : 0;
-        const flow = pathLength > 0 ? clamp(directLength / pathLength, 0, 1) : 0;
-        const rating = Math.round((span * 0.5 + balance * 0.3 + flow * 0.2) * 100);
-        const label = rating >= 85 ? "Elite" : rating >= 70 ? "Strong" : rating >= 50 ? "Steady" : "Weak";
-
-        return { span, balance, flow, rating, label };
       }
 
-      function updateBladeStats() {
-        const stats = analyzeBlade(bladePoints);
-        bladeSpanText.textContent = `${Math.round(stats.span * 100)}%`;
-        bladeBalanceText.textContent = `${Math.round(stats.balance * 100)}%`;
-        bladeFlowText.textContent = `${Math.round(stats.flow * 100)}%`;
-        bladeRatingText.textContent = stats.rating ? `${stats.label} ${stats.rating}` : "Draw";
-      }
-
-      function normalizeBlade() {
-        if (bladePoints.length < 2) return [{ x: -1, y: 0 }, { x: 1, y: 0 }];
-        let minX = Infinity;
-        let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
-        bladePoints.forEach((point) => {
-          minX = Math.min(minX, point.x);
-          maxX = Math.max(maxX, point.x);
-          minY = Math.min(minY, point.y);
-          maxY = Math.max(maxY, point.y);
-        });
-        const centerX = (minX + maxX) / 2;
-        const centerY = (minY + maxY) / 2;
-        const scale = Math.max(maxX - minX, maxY - minY, 1) / 2;
-        const stride = Math.max(1, Math.floor(bladePoints.length / 24));
-        const normalized = bladePoints
-          .filter((_, index) => index % stride === 0 || index === bladePoints.length - 1)
-          .map((point) => ({
-            x: clamp((point.x - centerX) / scale, -1, 1),
-            y: clamp((point.y - centerY) / scale, -1, 1)
-          }));
-        return normalized.length > 1 ? normalized : [{ x: -1, y: 0 }, { x: 1, y: 0 }];
-      }
-
-      function resetRace() {
-        playerCells = makeCells();
-        rivalCells = makeCells();
-        particles = [];
-        raceElapsed = 0;
+      function resetMatch() {
+        owners = new Uint8Array(TOTAL_CELLS);
+        cutAt = new Int16Array(TOTAL_CELLS).fill(-1);
+        counts = { you: 0, rival: 0, uncut: TOTAL_CELLS };
+        setupTick = 0;
+        countdownTick = 0;
         raceTick = 0;
-        simulationAccumulator = 0;
-        playerProgress = 0;
-        rivalProgress = 0;
-        playerX = 0.5;
-        rivalX = 0.5;
-        playerScore = 0;
-        rivalScore = 0;
-        playerCutCount = 0;
-        rivalCutCount = 0;
-        playerBladeAngle = 0;
-        rivalBladeAngle = 0;
-        playerFeedback = createLaneFeedback();
-        rivalFeedback = createLaneFeedback();
-        playerEventState = { phase: "idle", event: NEUTRAL_CONDITION, remaining: 0 };
-        rivalEventState = { phase: "idle", event: NEUTRAL_CONDITION, remaining: 0 };
-        matchupLife = 2.5;
-        lastLeader = 0;
-        leadChangeCount = 0;
-        leadChangeLife = 0;
-        lastLeadChangeAt = -10;
-        debugTimeline = [];
-        nextDebugSecond = 1;
-        window.__grassCutterDebug = undefined;
-        halfwayAnnounced = false;
-        finalFiveAnnounced = false;
-        lastHudKey = "";
-        updateHud(true);
+        frameAccumulatorMs = 0;
+        spawnRatio = 0.5;
+        spawnSlider.value = "50";
+        spawnChosen = false;
+        spawnLocked = false;
+        rivalRevealed = false;
+        playerMower = null;
+        rivalMower = null;
+        collisionCount = 0;
+        collisionFlashTicks = 0;
+        lastCollisionTick = -1;
+        lead = 0;
+        leadChanges = 0;
+        leadFlashTicks = 0;
+        lastNonTieLead = 0;
+        raceRewarded = false;
       }
 
-      function startRace() {
-        playerBladeStats = analyzeBlade(bladePoints);
-        playerRaceBlade = normalizeBlade();
-        createRaceScript();
-        phase = "racing";
-        resetRace();
+      function prepareRace() {
+        playerStats = analyzeBlade(bladePoints);
+        playerBlade = normalizeBlade(bladePoints);
+        raceSeed = newRaceSeed();
+        const random = mulberry32(raceSeed);
+        rival = chooseRival(random);
+        eventZones = buildEventZones(random);
+        spawnMinimum = clamp(
+          (Math.max(bladeReach(playerStats), bladeReach(rival)) + 0.18) / WORLD_HEIGHT,
+          SAFE_SPAWN_MIN,
+          0.32
+        );
+        spawnSlider.min = String(Math.ceil(spawnMinimum * 100));
+        spawnSlider.max = String(Math.floor((1 - spawnMinimum) * 100));
+      }
+
+      function createMower(id, x, y, stats, blade, direction) {
+        return {
+          id,
+          x,
+          y,
+          vx: 0,
+          vy: 0,
+          angle: direction > 0 ? 0 : Math.PI,
+          bladeAngle: 0,
+          stats,
+          blade,
+          direction,
+          targetX: WORLD_WIDTH / 2,
+          targetY: WORLD_HEIGHT / 2,
+          targetIndex: Math.floor(WORLD_HEIGHT / 2) * WORLD_COLS + Math.floor(WORLD_WIDTH / 2),
+          targetUntil: 300,
+          retargetSerial: 0,
+          slowTicks: 0,
+          cooldownTicks: 0,
+          bounceTicks: 0,
+          collisions: 0
+        };
+      }
+
+      function initializeMowers() {
+        const playerReach = bladeReach(playerStats) + 0.18;
+        const rivalReach = bladeReach(rival) + 0.18;
+        const playerY = clamp(spawnRatio * WORLD_HEIGHT, playerReach, WORLD_HEIGHT - playerReach);
+        const rivalRatio = 1 - spawnRatio;
+        const rivalY = clamp(rivalRatio * WORLD_HEIGHT, rivalReach, WORLD_HEIGHT - rivalReach);
+        playerMower = createMower(1, playerReach, playerY, playerStats, playerBlade, 1);
+        rivalMower = createMower(2, WORLD_WIDTH - rivalReach, rivalY, rival, rival.points, -1);
+      }
+
+      function revealRival() {
+        rivalRevealed = true;
+        rivalCard.hidden = false;
+        rivalCard.setAttribute("aria-hidden", "false");
+      }
+
+      function beginSpawn() {
+        if (bladePoints.length < 2) useStarterBlade();
+        resetMatch();
+        prepareRace();
         designOverlay.hidden = true;
         resultOverlay.hidden = true;
-        announcement.textContent = `The automatic grass cutting race has started. ${matchupLabel.toLowerCase()}, rival rating ${rivalBladeStats.rating}.`;
+        rivalCard.hidden = true;
+        rivalCard.setAttribute("aria-hidden", "true");
+        spawnPanel.hidden = CLASSIC_MODE;
+        spawnSlider.hidden = CLASSIC_MODE;
+        if (CLASSIC_MODE) {
+          spawnRatio = 0.5;
+          spawnChosen = true;
+          spawnLocked = true;
+          revealRival();
+          initializeMowers();
+          phase = "racing";
+          announcement.textContent = "The classic automatic race has started.";
+        } else {
+          phase = "spawn-select";
+          announcement.textContent = "Choose a safe starting position on the left edge. You have ten seconds.";
+        }
+        updateHud(true);
+        resize();
         canvas.focus({ preventScroll: true });
+        return snapshot();
+      }
+
+      function setSpawnRatio(value) {
+        if (phase !== "spawn-select") return spawnRatio;
+        spawnRatio = clamp(Number(value), spawnMinimum, 1 - spawnMinimum);
+        if (!Number.isFinite(spawnRatio)) spawnRatio = 0.5;
+        spawnChosen = true;
+        spawnSlider.value = String(Math.round(spawnRatio * 100));
+        updateHud(true);
+        render();
+        return spawnRatio;
+      }
+
+      function confirmSpawn() {
+        if (phase !== "spawn-select") return snapshot();
+        if (!spawnChosen) spawnRatio = 0.5;
+        spawnRatio = clamp(spawnRatio, spawnMinimum, 1 - spawnMinimum);
+        spawnLocked = true;
+        revealRival();
+        initializeMowers();
+        phase = "countdown";
+        countdownTick = 0;
+        spawnPanel.hidden = true;
+        spawnSlider.hidden = true;
+        announcement.textContent = `Start locked. Rival revealed at rating ${rival.rating}. Countdown three.`;
+        updateHud(true);
+        render();
+        return snapshot();
       }
 
       function showDesigner() {
         phase = "design";
-        resultOverlay.hidden = true;
         designOverlay.hidden = false;
+        resultOverlay.hidden = true;
+        spawnPanel.hidden = true;
+        spawnSlider.hidden = true;
+        rivalCard.hidden = true;
+        rivalCard.setAttribute("aria-hidden", "true");
+        updateHud(true);
         drawBladeOnPad();
-        startButton.focus({ preventScroll: true });
+        render();
       }
 
-      function mowerPoint(lane, progress, xRatio) {
-        return {
-          x: lane.x + clamp(xRatio, 0.09, 0.91) * lane.width,
-          y: layout.bottom - clamp(progress, 0, 1) * layout.laneHeight
-        };
+      function cellIndex(column, row) {
+        return row * WORLD_COLS + column;
       }
 
-      function transformedBlade(center, points, angle, radius) {
-        const cosine = Math.cos(angle);
-        const sine = Math.sin(angle);
-        return points.map((point) => ({
-          x: center.x + (point.x * cosine - point.y * sine) * radius,
-          y: center.y + (point.x * sine + point.y * cosine) * radius
+      function pointSegmentDistance(px, py, ax, ay, bx, by) {
+        const dx = bx - ax;
+        const dy = by - ay;
+        const lengthSquared = dx * dx + dy * dy;
+        if (!lengthSquared) return Math.hypot(px - ax, py - ay);
+        const ratio = clamp(((px - ax) * dx + (py - ay) * dy) / lengthSquared, 0, 1);
+        return Math.hypot(px - (ax + ratio * dx), py - (ay + ratio * dy));
+      }
+
+      function eventPhase(zone, tick = raceTick) {
+        if (tick >= CLEAN_FINISH_TICK) return "idle";
+        if (tick >= zone.startTick && tick < zone.endTick) return "active";
+        if (tick >= zone.startTick - EVENT_TELEGRAPH_TICKS && tick < zone.startTick) return "telegraph";
+        return "idle";
+      }
+
+      function currentEventSummary() {
+        for (const zone of eventZones) {
+          const state = eventPhase(zone);
+          if (state === "active") {
+            return { id: zone.id, phase: state, remainingTicks: zone.endTick - raceTick };
+          }
+        }
+        for (const zone of eventZones) {
+          const state = eventPhase(zone);
+          if (state === "telegraph") {
+            return { id: zone.id, phase: state, remainingTicks: zone.startTick - raceTick };
+          }
+        }
+        return { id: "calm", phase: "idle", remainingTicks: 0 };
+      }
+
+      function eventAtPoint(x, y) {
+        for (const zone of eventZones) {
+          if (
+            eventPhase(zone) === "active" &&
+            x >= zone.x && x <= zone.x + zone.width &&
+            y >= zone.y && y <= zone.y + zone.height
+          ) return zone;
+        }
+        return CALM;
+      }
+
+      function localUncutDensity(column, row) {
+        let density = 0;
+        for (let y = Math.max(0, row - 2); y <= Math.min(WORLD_ROWS - 1, row + 2); y += 1) {
+          for (let x = Math.max(0, column - 2); x <= Math.min(WORLD_COLS - 1, column + 2); x += 1) {
+            if (owners[cellIndex(x, y)] === 0) {
+              const distance = Math.abs(x - column) + Math.abs(y - row);
+              density += distance <= 1 ? 1.35 : 1;
+            }
+          }
+        }
+        return density;
+      }
+
+      function eventNavigationBonus(x, y) {
+        let bonus = 0;
+        for (const zone of eventZones) {
+          const state = eventPhase(zone);
+          if (state === "idle") continue;
+          if (x >= zone.x && x <= zone.x + zone.width && y >= zone.y && y <= zone.y + zone.height) {
+            const intensity = state === "active" ? 1 : 0.5;
+            const value = zone.id === "dry"
+              ? 5
+              : zone.id === "tailwind"
+                ? 4
+                : zone.id === "dew"
+                  ? -5
+                  : 0.5;
+            bonus += value * intensity;
+          }
+        }
+        return bonus;
+      }
+
+      function chooseTarget(mower, excludedIndex = -1, divergence = 0) {
+        let bestIndex = -1;
+        let bestScore = -Infinity;
+        for (let row = 0; row < WORLD_ROWS; row += 1) {
+          for (let column = 0; column < WORLD_COLS; column += 1) {
+            const index = cellIndex(column, row);
+            if (index === excludedIndex || owners[index] !== 0) continue;
+            const x = column + 0.5;
+            const y = row + 0.5;
+            const dx = x - mower.x;
+            const dy = y - mower.y;
+            const distance = Math.hypot(dx, dy);
+            if (distance < 1.2 || distance > 18) continue;
+            const density = localUncutDensity(column, row);
+            const forward = mower.direction * dx;
+            const divergeScore = divergence ? divergence * (y - mower.y) * 0.08 : 0;
+            const noise = seededNoise(raceSeed, mower.id, index, mower.retargetSerial) * 0.055;
+            const score = density * 1.7 - distance * 0.2 + forward * 0.035 + eventNavigationBonus(x, y) + divergeScore + noise;
+            if (score > bestScore) {
+              bestScore = score;
+              bestIndex = index;
+            }
+          }
+        }
+        if (bestIndex < 0) {
+          for (let index = 0; index < TOTAL_CELLS; index += 1) {
+            if (index !== excludedIndex && owners[index] === 0) {
+              bestIndex = index;
+              break;
+            }
+          }
+        }
+        if (bestIndex >= 0) {
+          mower.targetIndex = bestIndex;
+          mower.targetX = bestIndex % WORLD_COLS + 0.5;
+          mower.targetY = Math.floor(bestIndex / WORLD_COLS) + 0.5;
+          mower.targetUntil = raceTick + 150 + Math.floor(seededNoise(raceSeed, mower.id, mower.retargetSerial) * 60);
+          mower.retargetSerial += 1;
+        }
+      }
+
+      function updateMower(mower) {
+        mower.cooldownTicks = Math.max(0, mower.cooldownTicks - 1);
+        const isSlowed = mower.slowTicks > 0;
+        const condition = eventAtPoint(mower.x, mower.y);
+        mower.bladeAngle += (0.105 + mower.stats.flow * 0.035) * condition.turn;
+
+        if (mower.bounceTicks > 0) {
+          mower.bounceTicks -= 1;
+          mower.x += mower.vx / 60;
+          mower.y += mower.vy / 60;
+        } else {
+          const targetDistance = Math.hypot(mower.targetX - mower.x, mower.targetY - mower.y);
+          if (targetDistance < 0.72 || raceTick >= mower.targetUntil) {
+            chooseTarget(mower);
+          }
+          const dx = mower.targetX - mower.x;
+          const dy = mower.targetY - mower.y;
+          const distance = Math.max(0.000001, Math.hypot(dx, dy));
+          const slowFactor = isSlowed ? 0.54 : 1;
+          const speed = 4.2 * condition.speed * slowFactor;
+          let desiredX = dx / distance;
+          let desiredY = dy / distance;
+          if (condition.id === "crosswind") {
+            desiredY += condition.crosswindSign * 0.1;
+            const magnitude = Math.hypot(desiredX, desiredY);
+            desiredX /= magnitude;
+            desiredY /= magnitude;
+          }
+          mower.vx = desiredX * speed;
+          mower.vy = desiredY * speed;
+          mower.angle = Math.atan2(mower.vy, mower.vx);
+          mower.x += mower.vx / 60;
+          mower.y += mower.vy / 60;
+        }
+
+        const minimum = BODY_RADIUS + 0.08;
+        const maximumX = WORLD_WIDTH - minimum;
+        const maximumY = WORLD_HEIGHT - minimum;
+        if (mower.x < minimum || mower.x > maximumX) {
+          mower.x = clamp(mower.x, minimum, maximumX);
+          mower.vx *= -0.7;
+          mower.targetUntil = raceTick;
+        }
+        if (mower.y < minimum || mower.y > maximumY) {
+          mower.y = clamp(mower.y, minimum, maximumY);
+          mower.vy *= -0.7;
+          mower.targetUntil = raceTick;
+        }
+        mower.slowTicks = Math.max(0, mower.slowTicks - 1);
+      }
+
+      function resolveBodyCollision() {
+        if (CLASSIC_MODE || !playerMower || !rivalMower) return;
+        let dx = rivalMower.x - playerMower.x;
+        let dy = rivalMower.y - playerMower.y;
+        let distance = Math.hypot(dx, dy);
+        const minimumDistance = BODY_RADIUS * 2;
+        if (distance >= minimumDistance) return;
+        if (distance < 0.000001) {
+          dx = 1;
+          dy = 0;
+          distance = 1;
+        }
+        const normalX = dx / distance;
+        const normalY = dy / distance;
+        const overlap = minimumDistance - distance;
+        playerMower.x -= normalX * overlap * 0.5;
+        playerMower.y -= normalY * overlap * 0.5;
+        rivalMower.x += normalX * overlap * 0.5;
+        rivalMower.y += normalY * overlap * 0.5;
+
+        if (playerMower.cooldownTicks > 0 || rivalMower.cooldownTicks > 0) return;
+        const knockbackSpeed = 4.1;
+        playerMower.vx = -normalX * knockbackSpeed;
+        playerMower.vy = -normalY * knockbackSpeed;
+        rivalMower.vx = normalX * knockbackSpeed;
+        rivalMower.vy = normalY * knockbackSpeed;
+        playerMower.slowTicks = COLLISION_SLOW_TICKS;
+        rivalMower.slowTicks = COLLISION_SLOW_TICKS;
+        playerMower.cooldownTicks = COLLISION_COOLDOWN_TICKS;
+        rivalMower.cooldownTicks = COLLISION_COOLDOWN_TICKS;
+        playerMower.bounceTicks = 8;
+        rivalMower.bounceTicks = 8;
+        playerMower.collisions += 1;
+        rivalMower.collisions += 1;
+        collisionCount += 1;
+        lastCollisionTick = raceTick;
+        collisionFlashTicks = reducedMotion ? 24 : 54;
+        const playerOldTarget = playerMower.targetIndex;
+        const rivalOldTarget = rivalMower.targetIndex;
+        chooseTarget(playerMower, playerOldTarget, -1);
+        chooseTarget(rivalMower, rivalOldTarget, 1);
+        if (rivalMower.targetIndex === playerMower.targetIndex) {
+          const contestedTarget = playerMower.targetIndex;
+          const playerKeepsTarget = seededNoise(raceSeed, collisionCount, contestedTarget, 911) < 0.5;
+          const reroutedMower = playerKeepsTarget ? rivalMower : playerMower;
+          const divergence = playerKeepsTarget ? 1 : -1;
+          chooseTarget(reroutedMower, contestedTarget, divergence);
+          if (reroutedMower.targetIndex === contestedTarget) {
+            reroutedMower.targetIndex = -1;
+            reroutedMower.targetX = clamp(
+              reroutedMower.x + reroutedMower.direction * 4,
+              BODY_RADIUS,
+              WORLD_WIDTH - BODY_RADIUS
+            );
+            reroutedMower.targetY = clamp(
+              reroutedMower.y + divergence * 4,
+              BODY_RADIUS,
+              WORLD_HEIGHT - BODY_RADIUS
+            );
+            reroutedMower.targetUntil = raceTick + 90;
+          }
+        }
+        announcement.textContent = "Body collision. Both mowers slowed and selected new routes.";
+      }
+
+      function bladeReach(stats) {
+        return Math.max(0.85, 0.25 + stats.span * 2.3 + stats.balance * 0.18 + stats.flow * 0.1);
+      }
+
+      function transformedLogicalBlade(mower) {
+        const reach = bladeReach(mower.stats);
+        const cosine = Math.cos(mower.bladeAngle);
+        const sine = Math.sin(mower.bladeAngle);
+        return mower.blade.map((point) => ({
+          x: mower.x + (point.x * cosine - point.y * sine) * reach,
+          y: mower.y + (point.x * sine + point.y * cosine) * reach
         }));
       }
 
-      function pointSegmentDistance(point, start, end) {
-        const dx = end.x - start.x;
-        const dy = end.y - start.y;
-        const lengthSquared = dx * dx + dy * dy;
-        if (!lengthSquared) return Math.hypot(point.x - start.x, point.y - start.y);
-        const t = clamp(((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared, 0, 1);
-        return Math.hypot(point.x - (start.x + t * dx), point.y - (start.y + t * dy));
-      }
-
-      function bladeRadius(lane, stats) {
-        const radiusRatio = 0.085 + stats.span * 0.19 + stats.flow * 0.025;
-        return clamp(lane.width * radiusRatio, 18, lane.width * 0.34);
-      }
-
-      function spawnClipping(position, isPlayer, cell) {
-        const life = 0.35 + Math.random() * 0.3;
-        particles.push({
-          x: position.x,
-          y: position.y,
-          vx: (Math.random() - 0.5) * 72,
-          vy: -24 - Math.random() * 34,
-          life,
-          maxLife: life,
-          length: 3 + Math.random() * 3,
-          width: 1.5 + Math.random() * 0.5,
-          rotation: Math.random() * Math.PI,
-          spin: (Math.random() - 0.5) * 8,
-          color: isPlayer
-            ? (cell.index % 2 ? "#c8ff55" : "#21d76d")
-            : (cell.index % 2 ? "#ffb84d" : "#b7b43b")
-        });
-      }
-
-      function cutLane(cells, lane, center, points, angle, stats, isPlayer, condition = NEUTRAL_CONDITION) {
-        const radius = bladeRadius(lane, stats);
-        const blade = transformedBlade(center, points, angle, radius);
-        const cellWidth = lane.width / COLS;
-        const cellHeight = layout.laneHeight / ROWS;
-        const cuttingEfficiency = 0.5 + stats.balance * 0.27 + stats.flow * 0.12;
-        const threshold = Math.max(3, Math.min(cellWidth, cellHeight) * cuttingEfficiency * condition.cut);
-        let minimumX = center.x - 11;
-        let maximumX = center.x + 11;
-        let minimumY = center.y - 11;
-        let maximumY = center.y + 11;
-        blade.forEach((point) => {
-          minimumX = Math.min(minimumX, point.x);
-          maximumX = Math.max(maximumX, point.x);
-          minimumY = Math.min(minimumY, point.y);
-          maximumY = Math.max(maximumY, point.y);
-        });
-        const firstColumn = clamp(
-          Math.ceil((minimumX - threshold - lane.x) / cellWidth - 0.5),
-          0,
-          COLS - 1
-        );
-        const lastColumn = clamp(
-          Math.floor((maximumX + threshold - lane.x) / cellWidth - 0.5),
-          0,
-          COLS - 1
-        );
-        const firstRow = clamp(
-          Math.ceil((minimumY - threshold - layout.top) / cellHeight - 0.5),
-          0,
-          ROWS - 1
-        );
-        const lastRow = clamp(
-          Math.floor((maximumY + threshold - layout.top) / cellHeight - 0.5),
-          0,
-          ROWS - 1
-        );
-        const particleLimit = width < 620 || height < 420 ? 80 : 120;
-        let newlyCut = 0;
-        let emitted = 0;
-
+      function collectClaims(mower) {
+        const claims = new Map();
+        const blade = transformedLogicalBlade(mower);
+        const reach = bladeReach(mower.stats);
+        const condition = eventAtPoint(mower.x, mower.y);
+        const threshold = (
+          0.26 +
+          mower.stats.balance * 0.14 +
+          mower.stats.flow * 0.06 +
+          mower.stats.span * 0.12
+        ) * condition.cut;
+        const firstColumn = clamp(Math.floor(mower.x - reach - 1), 0, WORLD_COLS - 1);
+        const lastColumn = clamp(Math.ceil(mower.x + reach + 1), 0, WORLD_COLS - 1);
+        const firstRow = clamp(Math.floor(mower.y - reach - 1), 0, WORLD_ROWS - 1);
+        const lastRow = clamp(Math.ceil(mower.y + reach + 1), 0, WORLD_ROWS - 1);
         for (let row = firstRow; row <= lastRow; row += 1) {
           for (let column = firstColumn; column <= lastColumn; column += 1) {
-            const cell = cells[row * COLS + column];
-            if (cell.cut) continue;
-            const position = {
-              x: lane.x + (column + 0.5) * cellWidth,
-              y: layout.top + (row + 0.5) * cellHeight,
-              cellWidth,
-              cellHeight
-            };
-            let distance = Math.hypot(position.x - center.x, position.y - center.y) - 11;
-            for (let index = 1; index < blade.length; index += 1) {
-              distance = Math.min(distance, pointSegmentDistance(position, blade[index - 1], blade[index]));
+            const index = cellIndex(column, row);
+            if (owners[index] !== 0) continue;
+            const x = column + 0.5;
+            const y = row + 0.5;
+            let distance = Math.max(0, Math.hypot(x - mower.x, y - mower.y) - BODY_RADIUS);
+            for (let pointIndex = 1; pointIndex < blade.length; pointIndex += 1) {
+              distance = Math.min(distance, pointSegmentDistance(
+                x,
+                y,
+                blade[pointIndex - 1].x,
+                blade[pointIndex - 1].y,
+                blade[pointIndex].x,
+                blade[pointIndex].y
+              ));
             }
-            if (distance > threshold) continue;
-
-            cell.cut = true;
-            cell.cutAt = raceElapsed;
-            newlyCut += 1;
-
-            const sampleParticle = newlyCut <= 2 || (cell.index + Math.floor(raceElapsed * 60)) % 3 === 0;
-            if (!reducedMotion && emitted < 5 && particles.length < particleLimit && sampleParticle) {
-              spawnClipping(position, isPlayer, cell);
-              emitted += 1;
-            }
+            if (distance <= threshold) claims.set(index, distance);
           }
         }
-        return newlyCut;
+        return claims;
       }
 
-      function updateLaneFeedback(feedback, newlyCut, score, delta) {
-        feedback.energy = Math.max(0, feedback.energy - delta * 3.6);
-        feedback.milestone.life = Math.max(0, feedback.milestone.life - delta);
+      function resolveClaimOwner(playerDistance, rivalDistance) {
+        if (playerDistance + 1e-6 < rivalDistance) return 1;
+        if (rivalDistance + 1e-6 < playerDistance) return 2;
+        return 0;
+      }
 
-        if (newlyCut > 0) {
-          feedback.energy = Math.min(1, feedback.energy + newlyCut * 0.07);
-          feedback.chain = Math.min(999, feedback.chain + newlyCut);
-          feedback.chainWindow = 0.22;
-        } else {
-          feedback.chainWindow -= delta;
-          if (feedback.chainWindow <= 0) feedback.chain = 0;
-        }
-
-        while (
-          feedback.milestone.nextIndex < MILESTONES.length &&
-          score >= MILESTONES[feedback.milestone.nextIndex]
-        ) {
-          const milestone = MILESTONES[feedback.milestone.nextIndex];
-          feedback.milestone.text = `${Math.round(milestone * 100)}% CLEARED`;
-          feedback.milestone.life = feedback.milestone.maxLife;
-          feedback.milestone.tier = feedback.milestone.nextIndex + 1;
-          feedback.milestone.nextIndex += 1;
+      function resolveSimultaneousClaims() {
+        const playerClaims = collectClaims(playerMower);
+        const rivalClaims = collectClaims(rivalMower);
+        const candidates = new Set([...playerClaims.keys(), ...rivalClaims.keys()]);
+        for (const index of candidates) {
+          if (owners[index] !== 0) continue;
+          const playerDistance = playerClaims.has(index) ? playerClaims.get(index) : Infinity;
+          const rivalDistance = rivalClaims.has(index) ? rivalClaims.get(index) : Infinity;
+          const owner = resolveClaimOwner(playerDistance, rivalDistance);
+          if (owner === 0) continue;
+          owners[index] = owner;
+          cutAt[index] = raceTick;
+          if (owner === 1) counts.you += 1;
+          else counts.rival += 1;
+          counts.uncut -= 1;
         }
       }
 
-      function updateHud(force = false) {
-        const playerPercent = playerScore * 100;
-        const rivalPercent = rivalScore * 100;
-        const remaining = Math.max(0, RACE_SECONDS - raceElapsed);
-        const timerValue = phase === "racing" && remaining <= 5
-          ? `${remaining.toFixed(1)}s`
-          : `${Math.ceil(remaining)}s`;
-        const difference = playerPercent - rivalPercent;
-        let leadText = "Automatic race • Your blade controls the result";
-        let leadClass = "";
-
-        if (phase === "racing" || phase === "result") {
-          if (phase === "racing" && matchupLife > 0) {
-            leadText = `${matchupLabel} • RIVAL ${rivalBladeStats.rating}`;
-            leadClass = "tied";
-          } else if (phase === "racing" && leadChangeLife > 0 && Math.abs(difference) >= 0.005) {
-            leadText = difference > 0 ? "LEAD CHANGE • YOU AHEAD" : "LEAD CHANGE • RIVAL AHEAD";
-            leadClass = difference > 0 ? "player-lead" : "rival-lead";
-          } else if (Math.abs(difference) < 0.005) {
-            leadText = "TIED • 0.00%";
-            leadClass = "tied";
-          } else if (difference > 0) {
-            leadText = `YOU LEAD +${difference.toFixed(2)}%`;
-            leadClass = "player-lead";
-          } else {
-            leadText = `RIVAL LEADS +${Math.abs(difference).toFixed(2)}%`;
-            leadClass = "rival-lead";
-          }
+      function updateLead() {
+        const nextLead = Math.sign(counts.you - counts.rival);
+        if (nextLead !== 0 && lastNonTieLead !== 0 && nextLead !== lastNonTieLead) {
+          leadChanges += 1;
+          leadFlashTicks = reducedMotion ? 22 : 54;
+          announcement.textContent = nextLead > 0 ? "Lead change. You are ahead." : "Lead change. The rival is ahead.";
         }
-
-        const hudKey = [
-          playerPercent.toFixed(4),
-          rivalPercent.toFixed(4),
-          timerValue,
-          leadText,
-          phase
-        ].join("|");
-
-        if (force || hudKey !== lastHudKey) {
-          playerMeter.style.width = `${clamp(playerPercent, 0, 100).toFixed(4)}%`;
-          rivalMeter.style.width = `${clamp(rivalPercent, 0, 100).toFixed(4)}%`;
-          playerScoreText.textContent = `${playerPercent.toFixed(2)}%`;
-          rivalScoreText.textContent = `${rivalPercent.toFixed(2)}%`;
-          timerText.textContent = timerValue;
-          timerText.classList.toggle("urgent", phase === "racing" && remaining > 0 && remaining <= 5);
-          controlHint.textContent = leadText;
-          controlHint.className = "control-hint";
-          if (leadClass) controlHint.classList.add(leadClass);
-          lastHudKey = hudKey;
-        }
-
-        if (force || feed !== lastFeedValue) {
-          feedText.textContent = `🐾 ${feed}`;
-          lastFeedValue = feed;
-        }
+        if (nextLead !== 0) lastNonTieLead = nextLead;
+        lead = nextLead;
       }
 
-      function updateRace(delta) {
-        raceTick = Math.min(TOTAL_RACE_TICKS, raceTick + 1);
-        raceElapsed = raceTick * FIXED_STEP;
-        const priorPlayerEvent = playerEventState;
-        const priorRivalEvent = rivalEventState;
-        playerEventState = eventStateAt(playerEvents, raceElapsed);
-        rivalEventState = eventStateAt(rivalEvents, raceElapsed);
-        const playerCondition = activeCondition(playerEventState);
-        const rivalCondition = activeCondition(rivalEventState);
-        playerBladeAngle += delta * (5 + playerBladeStats.flow * 3) * playerCondition.spin;
-        rivalBladeAngle += delta * (5 + rivalBladeStats.flow * 3) * rivalCondition.spin;
-        matchupLife = Math.max(0, matchupLife - delta);
-        leadChangeLife = Math.max(0, leadChangeLife - delta);
-
-        const raceRatio = clamp(raceElapsed / RACE_SECONDS, 0, 1);
-        const automaticX = clamp(
-          0.5 + Math.sin(raceElapsed * 1.05) * 0.115 + Math.sin(raceElapsed * 2.35) * 0.025,
-          0.22,
-          0.78
-        );
-        playerProgress = raceRatio;
-        rivalProgress = raceRatio;
-        playerX = clamp(automaticX + playerCondition.bias, 0.22, 0.78);
-        rivalX = clamp(automaticX + rivalCondition.bias, 0.22, 0.78);
-
-        const playerCenter = mowerPoint(layout.playerLane, playerProgress, playerX);
-        const rivalCenter = mowerPoint(layout.rivalLane, rivalProgress, rivalX);
-        const playerNewlyCut = cutLane(
-          playerCells,
-          layout.playerLane,
-          playerCenter,
-          playerRaceBlade,
-          playerBladeAngle,
-          playerBladeStats,
-          true,
-          playerCondition
-        );
-        const rivalNewlyCut = cutLane(
-          rivalCells,
-          layout.rivalLane,
-          rivalCenter,
-          rivalBlade,
-          rivalBladeAngle,
-          rivalBladeStats,
-          false,
-          rivalCondition
-        );
-        playerCutCount += playerNewlyCut;
-        rivalCutCount += rivalNewlyCut;
-        playerScore = playerCutCount / playerCells.length;
-        rivalScore = rivalCutCount / rivalCells.length;
-        updateLaneFeedback(playerFeedback, playerNewlyCut, playerScore, delta);
-        updateLaneFeedback(rivalFeedback, rivalNewlyCut, rivalScore, delta);
-
-        const cutDifference = playerCutCount - rivalCutCount;
-        const leader = Math.abs(cutDifference) >= 4 ? Math.sign(cutDifference) : 0;
-        if (raceElapsed >= 2.5 && leader !== 0) {
-          if (lastLeader !== 0 && leader !== lastLeader) {
-            if (raceElapsed - lastLeadChangeAt >= 1.25) {
-              leadChangeCount += 1;
-              leadChangeLife = 0.9;
-              lastLeadChangeAt = raceElapsed;
-              announcement.textContent = leader > 0 ? "Lead change. Your mower is ahead." : "Lead change. The rival mower is ahead.";
-            }
-          }
-          lastLeader = leader;
-        }
-
-        if (
-          playerEventState.phase === "active" &&
-          (priorPlayerEvent.phase !== "active" || priorPlayerEvent.event.id !== playerEventState.event.id)
-        ) {
-          announcement.textContent = `${playerEventState.event.name.toLowerCase()} is active on your lawn.`;
-        } else if (
-          rivalEventState.phase === "active" &&
-          (priorRivalEvent.phase !== "active" || priorRivalEvent.event.id !== rivalEventState.event.id)
-        ) {
-          announcement.textContent = `${rivalEventState.event.name.toLowerCase()} is active on the rival lawn.`;
-        }
-
-        while (raceElapsed >= nextDebugSecond && nextDebugSecond <= RACE_SECONDS) {
-          debugTimeline.push({
-            second: nextDebugSecond,
-            playerCutCount,
-            rivalCutCount,
-            playerEvent: playerEventState.phase === "active" ? playerEventState.event.id : "calm",
-            rivalEvent: rivalEventState.phase === "active" ? rivalEventState.event.id : "calm"
-          });
-          nextDebugSecond += 1;
-        }
-
-        particles.forEach((particle) => {
-          particle.life -= delta;
-          particle.x += particle.vx * delta;
-          particle.y += particle.vy * delta;
-          particle.vy += 105 * delta;
-          particle.rotation += particle.spin * delta;
-        });
-        particles = particles.filter((particle) => particle.life > 0);
-
-        if (!halfwayAnnounced && raceElapsed >= RACE_SECONDS / 2) {
-          halfwayAnnounced = true;
-          announcement.textContent = `Halfway point. You have cut ${(playerScore * 100).toFixed(2)} percent.`;
-        }
-        if (!finalFiveAnnounced && RACE_SECONDS - raceElapsed <= 5) {
-          finalFiveAnnounced = true;
-          announcement.textContent = "Five seconds remain in the automatic race.";
-        }
-
+      function updateRaceTick() {
+        if (!playerMower || !rivalMower) return;
+        raceTick = Math.min(RACE_TICKS, raceTick + 1);
+        updateMower(playerMower);
+        updateMower(rivalMower);
+        resolveBodyCollision();
+        resolveSimultaneousClaims();
+        updateLead();
+        collisionFlashTicks = Math.max(0, collisionFlashTicks - 1);
+        leadFlashTicks = Math.max(0, leadFlashTicks - 1);
         updateHud();
-        if (raceTick >= TOTAL_RACE_TICKS) finishRace();
+        if (raceTick >= RACE_TICKS) finishRace();
+      }
+
+      function updateOneTick() {
+        if (phase === "spawn-select") {
+          setupTick = Math.min(SETUP_TICKS, setupTick + 1);
+          if (setupTick >= SETUP_TICKS) confirmSpawn();
+          else updateHud();
+        } else if (phase === "countdown") {
+          countdownTick = Math.min(COUNTDOWN_TICKS, countdownTick + 1);
+          if (countdownTick >= COUNTDOWN_TICKS) {
+            phase = "racing";
+            announcement.textContent = "Go. Both mowers are automatic.";
+          }
+          updateHud();
+        } else if (phase === "racing") {
+          updateRaceTick();
+        }
       }
 
       function finishRace() {
+        if (phase === "result") return;
         phase = "result";
-        const playerPercent = playerScore * 100;
-        const rivalPercent = rivalScore * 100;
-        const difference = playerCutCount - rivalCutCount;
+        const difference = counts.you - counts.rival;
         const reward = difference > 0 ? 12 : difference === 0 ? 8 : 5;
-        feed += reward;
-        saveFeed();
-        updateHud(true);
-
+        if (!raceRewarded) {
+          feed += reward;
+          saveFeed();
+          raceRewarded = true;
+        }
         if (difference > 0) {
           resultKicker.textContent = "You won the race";
-          resultTitle.textContent = "Freshly Cut";
-          petMessage.innerHTML = `<strong>🐶 Great run!</strong> You earned ${reward} bowls of pet food.`;
-        } else if (difference === 0) {
-          resultKicker.textContent = "Perfect tie";
-          resultTitle.textContent = "Even Finish";
-          petMessage.innerHTML = `<strong>🐰 Same score!</strong> You earned ${reward} bowls of pet food.`;
+          resultTitle.textContent = "YOU WIN";
+          petMessage.innerHTML = `<strong>Great run!</strong> You earned ${reward} bowls of pet food.`;
+        } else if (difference < 0) {
+          resultKicker.textContent = "Rival won the race";
+          resultTitle.textContent = "RIVAL WINS";
+          petMessage.innerHTML = `<strong>Close race!</strong> You still earned ${reward} bowls of pet food.`;
         } else {
-          resultKicker.textContent = "Close race";
-          resultTitle.textContent = "Try Another Line";
-          petMessage.innerHTML = `<strong>🐱 Keep mowing!</strong> You still earned ${reward} bowls of pet food.`;
+          resultKicker.textContent = "Exact tie";
+          resultTitle.textContent = "DRAW";
+          petMessage.innerHTML = `<strong>Even finish!</strong> You earned ${reward} bowls of pet food.`;
         }
-
-        resultPlayer.textContent = `${playerPercent.toFixed(2)}%`;
-        resultRival.textContent = `${rivalPercent.toFixed(2)}%`;
-        resultBlade.textContent = `${playerBladeStats.rating}/100`;
-        resultMeta.textContent = `${matchupLabel} • Rival ${rivalBladeStats.rating}/100 • Seed ${raceSeed}`;
-        window.__grassCutterDebug = Object.freeze({
-          mode: CLASSIC_MODE ? "classic" : "seeded-turf-drama",
-          raceSeed,
-          playerRating: playerBladeStats.rating,
-          rivalRating: rivalBladeStats.rating,
-          rivalName: RIVAL_TEMPLATES.find((template) => template.points === rivalBlade)?.name || "Rival",
-          matchupLabel,
-          playerEvents: playerEvents.map((event) => event.id),
-          rivalEvents: rivalEvents.map((event) => event.id),
-          leadChangeCount,
-          playerCutCount,
-          rivalCutCount,
-          timeline: debugTimeline.map((entry) => ({ ...entry }))
-        });
+        resultPlayer.textContent = `${(counts.you / TOTAL_CELLS * 100).toFixed(2)}%`;
+        resultRival.textContent = `${(counts.rival / TOTAL_CELLS * 100).toFixed(2)}%`;
+        resultUncut.textContent = `${(counts.uncut / TOTAL_CELLS * 100).toFixed(2)}%`;
+        resultBlade.textContent = `${playerStats.rating}/100`;
+        resultMeta.textContent = `Rival ${rival.rating}/100 • Seed ${raceSeed} • Collisions ${collisionCount}`;
         resultOverlay.hidden = false;
-        announcement.textContent = `Race complete. Your blade rated ${playerBladeStats.rating} and cut ${playerPercent.toFixed(2)} percent. The rival cut ${rivalPercent.toFixed(2)} percent. There were ${leadChangeCount} lead changes.`;
+        updateHud(true);
+        window.__grassCutterDebug = Object.freeze(snapshot());
+        announcement.textContent = `Race complete. You claimed ${counts.you} cells, the rival claimed ${counts.rival}, and ${counts.uncut} remain uncut.`;
         againButton.focus({ preventScroll: true });
       }
 
+      function updateHud(force = false) {
+        const playerPercent = counts.you / TOTAL_CELLS * 100;
+        const rivalPercent = counts.rival / TOTAL_CELLS * 100;
+        const uncutPercent = counts.uncut / TOTAL_CELLS * 100;
+        playerMeter.style.width = `${playerPercent.toFixed(4)}%`;
+        rivalMeter.style.width = `${rivalPercent.toFixed(4)}%`;
+        uncutMeter.style.width = `${uncutPercent.toFixed(4)}%`;
+        playerScoreText.textContent = `${playerPercent.toFixed(2)}%`;
+        rivalScoreText.textContent = `${rivalPercent.toFixed(2)}%`;
+        uncutScoreText.textContent = `${uncutPercent.toFixed(2)}%`;
+        feedText.textContent = `FOOD ${feed}`;
+        timerText.classList.remove("urgent");
+
+        let hint = "Shared arena • First cut owns each grass tile";
+        let hintClass = "";
+        if (phase === "spawn-select") {
+          const remaining = Math.max(0, SETUP_TICKS - setupTick);
+          const seconds = Math.ceil(remaining / 60);
+          timerText.textContent = `${seconds}s`;
+          spawnClock.textContent = String(seconds);
+          hint = spawnChosen ? `START ${(spawnRatio * 100).toFixed(0)}% • PRESS ENTER TO LOCK` : "CHOOSE A START • CENTER IS THE DEFAULT";
+        } else if (phase === "countdown") {
+          const count = Math.max(1, 3 - Math.floor(countdownTick / 60));
+          timerText.textContent = String(count);
+          hint = `RIVAL ${rival.rating} • STARTS MIRRORED`;
+          hintClass = "tied";
+        } else if (phase === "racing" || phase === "result") {
+          const remainingSeconds = Math.max(0, RACE_TICKS - raceTick) / 60;
+          timerText.textContent = `${remainingSeconds.toFixed(2)}s`;
+          timerText.classList.toggle("urgent", phase === "racing" && remainingSeconds > 0 && remainingSeconds <= 5);
+          const margin = Math.abs(counts.you - counts.rival) / TOTAL_CELLS * 100;
+          if (collisionFlashTicks > 0) {
+            hint = "BODY COLLISION • BOTH SLOWED 0.60S";
+            hintClass = "tied";
+          } else if (counts.you === counts.rival) {
+            hint = "DRAW • EXACT CELL COUNT";
+            hintClass = "tied";
+          } else if (counts.you > counts.rival) {
+            hint = `YOU LEAD +${margin.toFixed(2)}%`;
+            hintClass = "player-lead";
+          } else {
+            hint = `RIVAL LEADS +${margin.toFixed(2)}%`;
+            hintClass = "rival-lead";
+          }
+        } else {
+          timerText.textContent = "24.00s";
+        }
+        controlHint.textContent = hint;
+        controlHint.className = "control-hint";
+        if (hintClass) controlHint.classList.add(hintClass);
+        if (force) render();
+      }
+
+      function buildLayout() {
+        const side = clamp(viewportWidth * 0.035, 10, 30);
+        const top = viewportHeight < 420 ? 62 : 72;
+        const bottom = viewportHeight < 420 ? viewportHeight - 34 : viewportHeight - 48;
+        const arenaHeight = Math.max(120, bottom - top);
+        if (CLASSIC_MODE) {
+          const gap = clamp(viewportWidth * 0.025, 8, 18);
+          const laneWidth = (viewportWidth - side * 2 - gap) / 2;
+          return {
+            top,
+            bottom,
+            arena: { x: side, y: top, width: viewportWidth - side * 2, height: arenaHeight },
+            playerLane: { x: side, y: top, width: laneWidth, height: arenaHeight },
+            rivalLane: { x: side + laneWidth + gap, y: top, width: laneWidth, height: arenaHeight }
+          };
+        }
+        return {
+          top,
+          bottom,
+          arena: { x: side, y: top, width: viewportWidth - side * 2, height: arenaHeight },
+          playerLane: null,
+          rivalLane: null
+        };
+      }
+
+      function resize() {
+        const bounds = shell.getBoundingClientRect();
+        viewportWidth = Math.max(280, bounds.width);
+        viewportHeight = Math.max(280, bounds.height);
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(viewportWidth * dpr);
+        canvas.height = Math.round(viewportHeight * dpr);
+        canvas.style.width = `${viewportWidth}px`;
+        canvas.style.height = `${viewportHeight}px`;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        layout = buildLayout();
+        if (!CLASSIC_MODE) {
+          spawnSlider.style.left = `${Math.max(0, layout.arena.x - 22)}px`;
+          spawnSlider.style.top = `${layout.arena.y}px`;
+          spawnSlider.style.height = `${layout.arena.height}px`;
+        }
+        render();
+      }
+
+      function worldToCanvas(x, y, region = layout.arena) {
+        return {
+          x: region.x + x / WORLD_WIDTH * region.width,
+          y: region.y + y / WORLD_HEIGHT * region.height
+        };
+      }
+
       function drawBackground() {
-        const gradient = ctx.createLinearGradient(0, 0, 0, height);
-        gradient.addColorStop(0, "#0b2b18");
+        const gradient = ctx.createLinearGradient(0, 0, 0, viewportHeight);
+        gradient.addColorStop(0, "#0b2c18");
         gradient.addColorStop(1, "#041108");
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, width, height);
-
+        ctx.fillRect(0, 0, viewportWidth, viewportHeight);
         ctx.fillStyle = "rgba(200,255,85,.025)";
-        for (let x = 0; x < width; x += 42) ctx.fillRect(x, 0, 1, height);
-        for (let y = 0; y < height; y += 42) ctx.fillRect(0, y, width, 1);
+        for (let x = 0; x < viewportWidth; x += 42) ctx.fillRect(x, 0, 1, viewportHeight);
+        for (let y = 0; y < viewportHeight; y += 42) ctx.fillRect(0, y, viewportWidth, 1);
       }
 
-      function drawLane(lane, cells, accent, feedback) {
-        const cellWidth = lane.width / COLS;
-        const cellHeight = layout.laneHeight / ROWS;
-        const tuftHeight = clamp(cellHeight * 0.58, 2.5, 9);
+      function drawGrassRegion(region, classicOwner = 0) {
+        const cellWidth = region.width / WORLD_COLS;
+        const cellHeight = region.height / WORLD_ROWS;
         ctx.save();
-        roundedRect(ctx, lane.x, layout.top, lane.width, layout.laneHeight, 12);
+        roundedRect(ctx, region.x, region.y, region.width, region.height, 11);
         ctx.clip();
-        ctx.fillStyle = "#1b6b37";
-        ctx.fillRect(lane.x, layout.top, lane.width, layout.laneHeight);
-
-        cells.forEach((cell) => {
-          const x = lane.x + cell.column * cellWidth;
-          const y = layout.top + cell.row * cellHeight;
-          ctx.fillStyle = cell.cut ? CUT_SHADES[cell.shade] : UNCUT_SHADES[cell.shade];
-          ctx.fillRect(x, y, cellWidth + 0.55, cellHeight + 0.55);
-        });
-
-        ctx.fillStyle = "rgba(255,255,255,.035)";
-        for (let column = 0; column < COLS; column += 4) {
-          ctx.fillRect(lane.x + column * cellWidth, layout.top, cellWidth * 2, layout.laneHeight);
-        }
-
-        ctx.strokeStyle = "rgba(222,255,183,.42)";
-        ctx.lineWidth = clamp(cellWidth * 0.07, 0.75, 1.35);
-        ctx.lineCap = "round";
-        ctx.beginPath();
-        cells.forEach((cell) => {
-          if (cell.cut) return;
-          const tuftCount = clamp(Math.floor(cellWidth / 10), 1, 4);
-          const baseY = layout.top + (cell.row + 0.8) * cellHeight;
-          for (let tuftIndex = 0; tuftIndex < tuftCount; tuftIndex += 1) {
-            const fraction = (tuftIndex + 1) / (tuftCount + 1);
-            const jitter = (((cell.index + 3) * (tuftIndex + 5) * 7) % 5 - 2) * cellWidth * 0.018;
-            const tuftX = lane.x + (cell.column + fraction) * cellWidth + jitter;
-            const heightScale = 0.68 + ((cell.tuft + tuftIndex) % 3) * 0.13;
-            const lean = cell.lean * clamp(cellWidth * 0.065, 0.45, 1.8);
-            ctx.moveTo(tuftX, baseY);
-            ctx.lineTo(tuftX + lean, baseY - tuftHeight * heightScale);
-          }
-        });
-        ctx.stroke();
-
-        ctx.strokeStyle = "rgba(177,255,112,.18)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        cells.forEach((cell) => {
-          if (!cell.cut) return;
-          const centerX = lane.x + (cell.column + 0.5) * cellWidth;
-          const baseY = layout.top + (cell.row + 0.68) * cellHeight;
-          const halfWidth = Math.min(4, cellWidth * 0.28);
-          ctx.moveTo(centerX - halfWidth, baseY);
-          ctx.lineTo(centerX + halfWidth, baseY);
-        });
-        ctx.stroke();
-
-        if (phase === "racing") {
-          const flashDuration = reducedMotion ? 0.08 : 0.32;
-          cells.forEach((cell) => {
-            if (cell.cutAt < 0) return;
-            const age = raceElapsed - cell.cutAt;
-            if (age < 0 || age > flashDuration) return;
-            ctx.globalAlpha = (1 - age / flashDuration) * (reducedMotion ? 0.28 : 0.58);
-            ctx.fillStyle = accent;
+        ctx.fillStyle = "#247f40";
+        ctx.fillRect(region.x, region.y, region.width, region.height);
+        for (let row = 0; row < WORLD_ROWS; row += 1) {
+          for (let column = 0; column < WORLD_COLS; column += 1) {
+            const index = cellIndex(column, row);
+            const owner = classicOwner ? (owners[index] === classicOwner ? classicOwner : 0) : owners[index];
+            let color = OWNER_COLORS[owner];
+            if (owner === 0 && (index * 17 + row * 7) % 4 === 0) color = "#4fc064";
+            if (owner === 1 && index % 3 === 0) color = "#1b5b31";
+            if (owner === 2 && index % 3 === 0) color = "#9a5b28";
+            ctx.fillStyle = color;
             ctx.fillRect(
-              lane.x + cell.column * cellWidth,
-              layout.top + cell.row * cellHeight,
-              cellWidth + 0.5,
-              cellHeight + 0.5
+              region.x + column * cellWidth,
+              region.y + row * cellHeight,
+              cellWidth + 0.45,
+              cellHeight + 0.45
             );
-          });
-          ctx.globalAlpha = 1;
-        }
-        ctx.restore();
-
-        ctx.strokeStyle = `${accent}88`;
-        ctx.lineWidth = 2;
-        roundedRect(ctx, lane.x, layout.top, lane.width, layout.laneHeight, 12);
-        ctx.stroke();
-
-        const checker = Math.max(7, lane.width / 28);
-        for (let index = 0; index < Math.ceil(lane.width / checker); index += 1) {
-          ctx.fillStyle = index % 2 ? "#f8ffe8" : "#07140c";
-          ctx.fillRect(lane.x + index * checker, layout.top + 5, checker + 0.5, 7);
-        }
-
-        if (feedback.milestone.life > 0) {
-          const lifeRatio = clamp(feedback.milestone.life / feedback.milestone.maxLife, 0, 1);
-          const badgeWidth = Math.min(lane.width - 24, 132);
-          const badgeX = lane.x + (lane.width - badgeWidth) / 2;
-          const badgeY = layout.top + Math.max(42, layout.laneHeight * 0.22);
-          ctx.save();
-          ctx.globalAlpha = reducedMotion ? 0.82 : Math.min(1, lifeRatio * 1.65);
-          ctx.shadowColor = accent;
-          ctx.shadowBlur = 12 + feedback.milestone.tier * 4;
-          ctx.fillStyle = "rgba(3,17,9,.88)";
-          roundedRect(ctx, badgeX, badgeY, badgeWidth, 28, 8);
-          ctx.fill();
-          ctx.strokeStyle = accent;
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = accent;
-          ctx.font = `900 ${lane.width < 250 ? 10 : 11}px Trebuchet MS`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(feedback.milestone.text, lane.x + lane.width / 2, badgeY + 14);
-          ctx.restore();
-        }
-      }
-
-      function drawEventState(lane, state) {
-        if (phase !== "racing" || state.phase === "idle") return;
-        const event = state.event;
-        const isActive = state.phase === "active";
-        const centerX = lane.x + lane.width / 2;
-        const badgeWidth = Math.min(lane.width - 18, lane.width < 230 ? 126 : 154);
-        const badgeHeight = lane.width < 230 ? 24 : 28;
-        const badgeY = layout.top + (height < 420 ? 31 : 38);
-
-        ctx.save();
-        if (isActive) {
-          roundedRect(ctx, lane.x, layout.top, lane.width, layout.laneHeight, 12);
-          ctx.clip();
-          const tint = ctx.createLinearGradient(lane.x, layout.top, lane.x + lane.width, layout.bottom);
-          tint.addColorStop(0, `${event.color}16`);
-          tint.addColorStop(0.5, `${event.color}05`);
-          tint.addColorStop(1, `${event.color}1d`);
-          ctx.fillStyle = tint;
-          ctx.fillRect(lane.x, layout.top, lane.width, layout.laneHeight);
-
-          if (event.id === "crosswind") {
-            ctx.globalAlpha = reducedMotion ? 0.28 : 0.2 + Math.sin(raceElapsed * 7) * 0.06;
-            ctx.strokeStyle = event.color;
-            ctx.lineWidth = 1.5;
-            const direction = Math.sign(event.bias) || 1;
-            for (let row = 0; row < 4; row += 1) {
-              const y = layout.top + layout.laneHeight * (0.25 + row * 0.16);
-              const startX = direction > 0 ? lane.x + lane.width * 0.18 : lane.x + lane.width * 0.82;
-              const endX = startX + direction * lane.width * 0.18;
+            if (owner === 0 && cellWidth >= 5 && cellHeight >= 4) {
+              ctx.strokeStyle = "rgba(225,255,193,.30)";
+              ctx.lineWidth = 0.7;
               ctx.beginPath();
-              ctx.moveTo(startX, y);
-              ctx.lineTo(endX, y);
-              ctx.lineTo(endX - direction * 6, y - 4);
-              ctx.moveTo(endX, y);
-              ctx.lineTo(endX - direction * 6, y + 4);
+              const centerX = region.x + (column + 0.5) * cellWidth;
+              const baseY = region.y + (row + 0.82) * cellHeight;
+              ctx.moveTo(centerX, baseY);
+              ctx.lineTo(centerX + ((index % 3) - 1) * 0.7, baseY - Math.min(4, cellHeight * 0.58));
               ctx.stroke();
             }
+            if (cutAt[index] >= 0 && raceTick - cutAt[index] < 18) {
+              ctx.fillStyle = owner === 1 ? "rgba(200,255,85,.26)" : "rgba(255,184,77,.25)";
+              ctx.fillRect(region.x + column * cellWidth, region.y + row * cellHeight, cellWidth, cellHeight);
+            }
           }
         }
         ctx.restore();
-
-        ctx.save();
-        ctx.fillStyle = isActive ? "rgba(3,17,9,.94)" : "rgba(3,17,9,.82)";
-        ctx.shadowColor = event.color;
-        ctx.shadowBlur = isActive && !reducedMotion ? 14 : 5;
-        roundedRect(ctx, centerX - badgeWidth / 2, badgeY, badgeWidth, badgeHeight, 7);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = event.color;
-        ctx.lineWidth = isActive ? 1.5 : 1;
+        ctx.strokeStyle = "rgba(200,255,85,.45)";
+        ctx.lineWidth = 2;
+        roundedRect(ctx, region.x, region.y, region.width, region.height, 11);
         ctx.stroke();
-        ctx.fillStyle = event.color;
-        ctx.font = `900 ${lane.width < 230 ? 8.5 : 10}px Trebuchet MS`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        const label = isActive
-          ? `${event.icon} ${event.name} • LIVE`
-          : `${event.icon} ${event.name} IN ${state.remaining.toFixed(1)}S`;
-        ctx.fillText(label, centerX, badgeY + badgeHeight / 2);
-        ctx.restore();
       }
 
-      function drawLeadChange() {
-        if (phase !== "racing" || leadChangeLife <= 0 || playerCutCount === rivalCutCount) return;
-        const playerLeads = playerCutCount > rivalCutCount;
-        const accent = playerLeads ? "#c8ff55" : "#ffb84d";
-        const badgeWidth = Math.min(176, width - 30);
-        const badgeY = height < 420 ? height * 0.5 - 18 : height * 0.45;
-        ctx.save();
-        ctx.globalAlpha = reducedMotion ? 0.92 : clamp(leadChangeLife * 1.8, 0, 1);
-        ctx.fillStyle = "rgba(3,13,7,.92)";
-        ctx.shadowColor = accent;
-        ctx.shadowBlur = reducedMotion ? 0 : 20;
-        roundedRect(ctx, width / 2 - badgeWidth / 2, badgeY, badgeWidth, 36, 9);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = accent;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.fillStyle = accent;
-        ctx.font = "900 11px Trebuchet MS";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(playerLeads ? "LEAD CHANGE • YOU" : "LEAD CHANGE • RIVAL", width / 2, badgeY + 18);
-        ctx.restore();
-      }
-
-      function drawMower(center, lane, points, angle, stats, accent, label, feedback) {
-        const radius = bladeRadius(lane, stats);
-        const blade = transformedBlade(center, points, angle, radius);
-
-        if (!reducedMotion && feedback.energy > 0.025) {
+      function drawEvents(region) {
+        if (phase !== "racing") return;
+        for (const zone of eventZones) {
+          const state = eventPhase(zone);
+          if (state === "idle") continue;
+          const topLeft = worldToCanvas(zone.x, zone.y, region);
+          const bottomRight = worldToCanvas(zone.x + zone.width, zone.y + zone.height, region);
           ctx.save();
-          ctx.lineCap = "round";
-          ctx.lineJoin = "round";
-          ctx.shadowColor = accent;
-          ctx.shadowBlur = 8;
-          [0.3, 0.16].forEach((offset, index) => {
-            const trail = transformedBlade(center, points, angle - offset, radius);
-            ctx.globalAlpha = feedback.energy * (index === 0 ? 0.12 : 0.2);
-            ctx.strokeStyle = accent;
-            ctx.lineWidth = clamp(lane.width * 0.013, 2.5, 6);
-            ctx.beginPath();
-            ctx.moveTo(trail[0].x, trail[0].y);
-            for (let pointIndex = 1; pointIndex < trail.length; pointIndex += 1) {
-              ctx.lineTo(trail[pointIndex].x, trail[pointIndex].y);
-            }
-            ctx.stroke();
-          });
-          ctx.globalAlpha = feedback.energy * 0.24;
-          ctx.lineWidth = clamp(lane.width * 0.008, 1.5, 3);
-          ctx.beginPath();
-          ctx.arc(center.x, center.y, radius * 0.78, angle - 1.25, angle + 0.35);
-          ctx.stroke();
+          ctx.globalAlpha = state === "active" ? 0.24 : 0.12;
+          ctx.fillStyle = zone.color;
+          ctx.fillRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
+          ctx.globalAlpha = 0.9;
+          ctx.strokeStyle = zone.color;
+          ctx.setLineDash(state === "telegraph" ? [5, 4] : []);
+          ctx.lineWidth = state === "active" ? 2 : 1;
+          ctx.strokeRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
+          ctx.setLineDash([]);
+          ctx.fillStyle = "rgba(3,17,9,.88)";
+          roundedRect(ctx, topLeft.x + 4, topLeft.y + 4, Math.min(105, bottomRight.x - topLeft.x - 8), 19, 5);
+          ctx.fill();
+          ctx.fillStyle = zone.color;
+          ctx.font = "900 9px Trebuchet MS";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "middle";
+          const remaining = state === "active" ? zone.endTick - raceTick : zone.startTick - raceTick;
+          ctx.fillText(`${zone.label} ${state === "active" ? "LIVE" : (remaining / 60).toFixed(1) + "S"}`, topLeft.x + 9, topLeft.y + 13.5);
           ctx.restore();
         }
+      }
 
+      function drawSpawnRail() {
+        if (CLASSIC_MODE || (phase !== "spawn-select" && phase !== "countdown")) return;
+        // During selection the native range control is the visible rail and thumb.
+        // Draw the canvas markers only after lock-in so the UI never shows two handles.
+        if (phase === "spawn-select") return;
+        const region = layout.arena;
+        const y = region.y + spawnRatio * region.height;
         ctx.save();
-        ctx.strokeStyle = accent;
-        ctx.lineWidth = clamp(lane.width * 0.018, 4, 9);
+        ctx.strokeStyle = "rgba(200,255,85,.72)";
+        ctx.lineWidth = 4;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(region.x + 3, region.y + spawnMinimum * region.height);
+        ctx.lineTo(region.x + 3, region.y + (1 - spawnMinimum) * region.height);
+        ctx.stroke();
+        ctx.fillStyle = "#c8ff55";
+        ctx.shadowColor = "#c8ff55";
+        ctx.shadowBlur = reducedMotion ? 0 : 15;
+        ctx.beginPath();
+        ctx.arc(region.x + 3, y, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        if (phase === "countdown" && rivalMower) {
+          const rivalPoint = worldToCanvas(rivalMower.x, rivalMower.y, region);
+          ctx.fillStyle = "#ffb84d";
+          ctx.beginPath();
+          ctx.arc(rivalPoint.x, rivalPoint.y, 10, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function drawBlade(mower, region, color) {
+        const logical = transformedLogicalBlade(mower);
+        const first = worldToCanvas(logical[0].x, logical[0].y, region);
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = clamp(region.width / WORLD_WIDTH * 0.45, 3, 7);
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
-        ctx.shadowColor = accent;
-        ctx.shadowBlur = 12;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = reducedMotion ? 0 : 9;
         ctx.beginPath();
-        ctx.moveTo(blade[0].x, blade[0].y);
-        for (let index = 1; index < blade.length; index += 1) ctx.lineTo(blade[index].x, blade[index].y);
+        ctx.moveTo(first.x, first.y);
+        for (let index = 1; index < logical.length; index += 1) {
+          const point = worldToCanvas(logical[index].x, logical[index].y, region);
+          ctx.lineTo(point.x, point.y);
+        }
         ctx.stroke();
         ctx.restore();
+      }
 
+      function drawMower(mower, region, color, label) {
+        if (!mower) return;
+        drawBlade(mower, region, color);
+        const point = worldToCanvas(mower.x, mower.y, region);
+        const scale = clamp(Math.min(region.width / WORLD_WIDTH, region.height / WORLD_HEIGHT), 5.5, 12);
+        const radius = BODY_RADIUS * scale;
         ctx.save();
-        ctx.translate(center.x, center.y);
+        ctx.translate(point.x, point.y);
+        ctx.rotate(mower.angle);
         ctx.fillStyle = "rgba(0,0,0,.3)";
         ctx.beginPath();
-        ctx.ellipse(0, 10, 21, 12, 0, 0, Math.PI * 2);
+        ctx.ellipse(1, 3, radius * 1.2, radius * 0.8, 0, 0, Math.PI * 2);
         ctx.fill();
-
         ctx.fillStyle = "#06140c";
-        roundedRect(ctx, -20, -16, 40, 30, 8);
+        roundedRect(ctx, -radius, -radius * 0.72, radius * 2, radius * 1.44, radius * 0.35);
         ctx.fill();
-        ctx.fillStyle = accent;
-        roundedRect(ctx, -15, -13, 30, 23, 6);
+        ctx.fillStyle = color;
+        roundedRect(ctx, -radius * 0.7, -radius * 0.56, radius * 1.4, radius * 1.12, radius * 0.28);
         ctx.fill();
         ctx.fillStyle = "#f8ffe8";
         ctx.beginPath();
-        ctx.arc(0, -4, 5, 0, Math.PI * 2);
+        ctx.arc(0, 0, Math.max(2, radius * 0.25), 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = "#06140c";
-        ctx.fillRect(-24, -10, 7, 18);
-        ctx.fillRect(17, -10, 7, 18);
         ctx.restore();
-
-        ctx.fillStyle = "rgba(5,19,11,.84)";
-        roundedRect(ctx, center.x - 24, center.y + 20, 48, 18, 5);
+        ctx.fillStyle = "rgba(3,17,9,.86)";
+        roundedRect(ctx, point.x - 24, point.y + radius + 4, 48, 17, 5);
         ctx.fill();
-        ctx.fillStyle = accent;
+        ctx.fillStyle = color;
         ctx.font = "900 9px Trebuchet MS";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(label, center.x, center.y + 29);
+        ctx.fillText(label, point.x, point.y + radius + 12.5);
+      }
 
-        if (!reducedMotion && feedback.chain >= 6 && feedback.chainWindow > 0) {
-          const chainAlpha = clamp(feedback.chainWindow / 0.22, 0, 1);
-          const chainY = center.y - 35 - (1 - chainAlpha) * 8;
+      function drawCountdown() {
+        if (phase !== "countdown") return;
+        const number = Math.max(1, 3 - Math.floor(countdownTick / 60));
+        ctx.save();
+        ctx.fillStyle = "rgba(3,13,7,.48)";
+        ctx.fillRect(0, 0, viewportWidth, viewportHeight);
+        ctx.fillStyle = "#f8ffe8";
+        ctx.shadowColor = "#c8ff55";
+        ctx.shadowBlur = reducedMotion ? 0 : 24;
+        ctx.font = `950 ${clamp(Math.min(viewportWidth, viewportHeight) * 0.25, 58, 120)}px Trebuchet MS`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(String(number), viewportWidth / 2, viewportHeight / 2);
+        ctx.restore();
+      }
+
+      function drawFeedback() {
+        if (phase !== "racing") return;
+        if (collisionFlashTicks > 0) {
+          const alpha = reducedMotion ? 0.9 : clamp(collisionFlashTicks / 20, 0, 1);
           ctx.save();
-          ctx.globalAlpha = chainAlpha;
-          ctx.fillStyle = "rgba(3,17,9,.86)";
-          roundedRect(ctx, center.x - 38, chainY - 9, 76, 18, 5);
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = "rgba(3,13,7,.9)";
+          roundedRect(ctx, viewportWidth / 2 - 92, viewportHeight * 0.42, 184, 34, 8);
           ctx.fill();
-          ctx.fillStyle = accent;
-          ctx.font = "900 9px Trebuchet MS";
+          ctx.strokeStyle = "#f8ffe8";
+          ctx.stroke();
+          ctx.fillStyle = "#f8ffe8";
+          ctx.font = "900 10px Trebuchet MS";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.fillText(`CUT CHAIN ×${feedback.chain}`, center.x, chainY);
+          ctx.fillText("BODY COLLISION • ROUTES RESET", viewportWidth / 2, viewportHeight * 0.42 + 17);
           ctx.restore();
+        } else if (leadFlashTicks > 0) {
+          const color = lead > 0 ? "#c8ff55" : "#ffb84d";
+          ctx.fillStyle = "rgba(3,13,7,.88)";
+          roundedRect(ctx, viewportWidth / 2 - 76, viewportHeight * 0.42, 152, 31, 8);
+          ctx.fill();
+          ctx.strokeStyle = color;
+          ctx.stroke();
+          ctx.fillStyle = color;
+          ctx.font = "900 10px Trebuchet MS";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(lead > 0 ? "LEAD CHANGE • YOU" : "LEAD CHANGE • RIVAL", viewportWidth / 2, viewportHeight * 0.42 + 15.5);
         }
-      }
-
-      function drawParticles() {
-        if (reducedMotion) return;
-        particles.forEach((particle) => {
-          ctx.save();
-          ctx.translate(particle.x, particle.y);
-          ctx.rotate(particle.rotation);
-          ctx.globalAlpha = clamp(particle.life / particle.maxLife, 0, 1);
-          ctx.fillStyle = particle.color;
-          ctx.fillRect(-particle.width / 2, -particle.length / 2, particle.width, particle.length);
-          ctx.restore();
-        });
-      }
-
-      function drawFinalVignette() {
-        if (phase !== "racing") return;
-        const remaining = RACE_SECONDS - raceElapsed;
-        if (remaining <= 0 || remaining > 5) return;
-        const urgency = 1 - remaining / 5;
-        const pulse = reducedMotion ? 0.45 : 0.55 + Math.sin(raceElapsed * 9) * 0.2;
-        const gradient = ctx.createRadialGradient(
-          width / 2,
-          height / 2,
-          Math.min(width, height) * 0.18,
-          width / 2,
-          height / 2,
-          Math.max(width, height) * 0.68
-        );
-        gradient.addColorStop(0, "rgba(255,74,67,0)");
-        gradient.addColorStop(1, `rgba(255,74,67,${(0.025 + urgency * 0.055 * pulse).toFixed(3)})`);
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, width, height);
       }
 
       function render() {
         if (!layout) return;
         drawBackground();
-        drawLane(layout.playerLane, playerCells.length ? playerCells : makeCells(), "#c8ff55", playerFeedback);
-        drawLane(layout.rivalLane, rivalCells.length ? rivalCells : makeCells(), "#ffb84d", rivalFeedback);
-        drawEventState(layout.playerLane, playerEventState);
-        drawEventState(layout.rivalLane, rivalEventState);
-
-        ctx.fillStyle = "rgba(248,255,232,.58)";
-        ctx.font = `900 ${height < 420 ? 9 : 11}px Trebuchet MS`;
-        ctx.textAlign = "center";
-        ctx.fillText("YOUR LAWN", layout.playerLane.x + layout.playerLane.width / 2, layout.top + 26);
-        ctx.fillText("RIVAL LAWN", layout.rivalLane.x + layout.rivalLane.width / 2, layout.top + 26);
-
-        if (phase === "racing" || phase === "result") {
-          const playerCenter = mowerPoint(layout.playerLane, playerProgress, playerX);
-          const rivalCenter = mowerPoint(layout.rivalLane, rivalProgress, rivalX);
-          drawMower(playerCenter, layout.playerLane, playerRaceBlade, playerBladeAngle, playerBladeStats, "#c8ff55", "YOU", playerFeedback);
-          drawMower(rivalCenter, layout.rivalLane, rivalBlade, rivalBladeAngle, rivalBladeStats, "#ffb84d", "RIVAL", rivalFeedback);
+        if (CLASSIC_MODE) {
+          drawGrassRegion(layout.playerLane, 1);
+          drawGrassRegion(layout.rivalLane, 2);
+          ctx.fillStyle = "rgba(248,255,232,.65)";
+          ctx.font = "900 10px Trebuchet MS";
+          ctx.textAlign = "center";
+          ctx.fillText("YOUR LAWN", layout.playerLane.x + layout.playerLane.width / 2, layout.playerLane.y + 18);
+          ctx.fillText("RIVAL LAWN", layout.rivalLane.x + layout.rivalLane.width / 2, layout.rivalLane.y + 18);
+          if (playerMower) drawMower(playerMower, layout.playerLane, "#c8ff55", "YOU");
+          if (rivalMower && rivalRevealed) drawMower(rivalMower, layout.rivalLane, "#ffb84d", "RIVAL");
+        } else {
+          drawGrassRegion(layout.arena);
+          drawEvents(layout.arena);
+          drawSpawnRail();
+          if ((phase === "countdown" || phase === "racing" || phase === "result") && playerMower) {
+            drawMower(playerMower, layout.arena, "#c8ff55", "YOU");
+          }
+          if (rivalRevealed && rivalMower) drawMower(rivalMower, layout.arena, "#ffb84d", "RIVAL");
         }
-        drawLeadChange();
-        drawParticles();
-        drawFinalVignette();
+        drawFeedback();
+        drawCountdown();
       }
 
-      function advanceSimulation(delta) {
-        simulationAccumulator += delta;
+      function advanceTicks(count) {
+        const safeCount = clamp(Math.floor(Number(count) || 0), 0, 100000);
+        for (let index = 0; index < safeCount; index += 1) {
+          if (phase === "design" || phase === "result") break;
+          updateOneTick();
+        }
+        render();
+        return snapshot();
+      }
+
+      function advanceFrame(milliseconds) {
+        const delta = clamp(Number(milliseconds) || 0, 0, 1000);
+        frameAccumulatorMs += delta;
         let steps = 0;
-        while (
-          simulationAccumulator >= FIXED_STEP &&
-          phase === "racing" &&
-          steps < MAX_SIMULATION_STEPS
-        ) {
-          updateRace(FIXED_STEP);
-          simulationAccumulator -= FIXED_STEP;
+        while (frameAccumulatorMs + 1e-7 >= STEP_MS && steps < 240) {
+          if (phase === "design" || phase === "result") {
+            frameAccumulatorMs = 0;
+            break;
+          }
+          updateOneTick();
+          frameAccumulatorMs -= STEP_MS;
+          if (frameAccumulatorMs < 1e-7) frameAccumulatorMs = 0;
           steps += 1;
         }
-        if (steps === MAX_SIMULATION_STEPS && simulationAccumulator >= FIXED_STEP) {
-          simulationAccumulator = 0;
-        }
-        return steps;
+        render();
+        return snapshot();
       }
 
-      function animationLoop(now) {
-        const delta = Math.min(Math.max((now - lastTime) / 1000, 0), 0.1);
-        lastTime = now;
-        if (phase === "racing") {
-          advanceSimulation(delta);
-        } else {
-          simulationAccumulator = 0;
+      function ownerChecksumNumber() {
+        let hash = 2166136261;
+        for (let index = 0; index < owners.length; index += 1) {
+          hash = Math.imul(hash ^ owners[index], 16777619);
         }
-        if (phase === "racing" || phase !== lastRenderedPhase) {
-          render();
-          lastRenderedPhase = phase;
-        }
-        requestAnimationFrame(animationLoop);
+        return hash >>> 0;
+      }
+
+      function publicMower(mower) {
+        if (!mower) return null;
+        return {
+          x: mower.x,
+          y: mower.y,
+          vx: mower.vx,
+          vy: mower.vy,
+          targetX: mower.targetX,
+          targetY: mower.targetY,
+          targetIndex: mower.targetIndex,
+          target: { x: mower.targetX, y: mower.targetY, index: mower.targetIndex },
+          slowTicks: mower.slowTicks,
+          cooldownTicks: mower.cooldownTicks,
+          bounceTicks: mower.bounceTicks,
+          collisions: mower.collisions
+        };
+      }
+
+      function snapshot() {
+        const checksum = ownerChecksumNumber();
+        const event = currentEventSummary();
+        const publicRivalMower = rivalRevealed ? publicMower(rivalMower) : null;
+        return {
+          mode: CLASSIC_MODE ? "classic" : "shared-arena",
+          phase,
+          seed: raceSeed,
+          raceSeed,
+          setupTick,
+          setupTicks: setupTick,
+          countdownTick,
+          countdownTicks: countdownTick,
+          raceTick,
+          raceTicks: raceTick,
+          spawnRatio,
+          spawnMinimum,
+          playerSpawnRatio: spawnRatio,
+          rivalSpawnRatio: rivalRevealed ? 1 - spawnRatio : null,
+          spawnChosen,
+          spawnLocked,
+          rivalRevealed,
+          reveal: rivalRevealed,
+          spawn: {
+            player: spawnRatio,
+            rival: rivalRevealed ? 1 - spawnRatio : null,
+            chosen: spawnChosen,
+            locked: spawnLocked,
+            rivalRevealed
+          },
+          playerRating: playerStats.rating,
+          rivalRating: rivalRevealed ? rival.rating : null,
+          mower: { player: publicMower(playerMower), rival: publicRivalMower },
+          mowers: { player: publicMower(playerMower), rival: publicRivalMower },
+          counts: { you: counts.you, player: counts.you, rival: counts.rival, uncut: counts.uncut, total: TOTAL_CELLS },
+          playerCutCount: counts.you,
+          rivalCutCount: counts.rival,
+          uncutCount: counts.uncut,
+          coverage: {
+            you: counts.you / TOTAL_CELLS,
+            player: counts.you / TOTAL_CELLS,
+            rival: counts.rival / TOTAL_CELLS,
+            uncut: counts.uncut / TOTAL_CELLS
+          },
+          percentages: {
+            you: counts.you / TOTAL_CELLS * 100,
+            rival: counts.rival / TOTAL_CELLS * 100,
+            uncut: counts.uncut / TOTAL_CELLS * 100
+          },
+          collision: { count: collisionCount, lastTick: lastCollisionTick, feedbackTicks: collisionFlashTicks },
+          collisions: collisionCount,
+          lead: { leader: lead, changes: leadChanges, margin: counts.you - counts.rival, feedbackTicks: leadFlashTicks },
+          leadChangeCount: leadChanges,
+          event,
+          events: eventZones.map((zone) => ({
+            id: zone.id,
+            phase: eventPhase(zone),
+            x: zone.x,
+            y: zone.y,
+            width: zone.width,
+            height: zone.height,
+            startTick: zone.startTick,
+            endTick: zone.endTick
+          })),
+          ownersChecksum: checksum.toString(16).padStart(8, "0"),
+          ownersChecksumValue: checksum
+        };
+      }
+
+      function getOwners() {
+        return Array.from(owners);
+      }
+
+      function setTestRival(name) {
+        if (!TEST_MODE) throw new Error("Test mode is required");
+        const match = RIVALS.find((candidate) => candidate.name.toLowerCase() === String(name).toLowerCase());
+        if (!match) throw new Error("Unknown rival preset");
+        rival = match;
+        spawnMinimum = clamp(
+          (Math.max(bladeReach(playerStats), bladeReach(rival)) + 0.18) / WORLD_HEIGHT,
+          SAFE_SPAWN_MIN,
+          0.32
+        );
+        spawnSlider.min = String(Math.ceil(spawnMinimum * 100));
+        spawnSlider.max = String(Math.floor((1 - spawnMinimum) * 100));
+        return rival.name;
+      }
+
+      function setTestMowerPositions(playerPosition, rivalPosition) {
+        if (!TEST_MODE || !playerMower || !rivalMower) throw new Error("Initialized test mowers are required");
+        playerMower.x = clamp(Number(playerPosition.x), BODY_RADIUS, WORLD_WIDTH - BODY_RADIUS);
+        playerMower.y = clamp(Number(playerPosition.y), BODY_RADIUS, WORLD_HEIGHT - BODY_RADIUS);
+        rivalMower.x = clamp(Number(rivalPosition.x), BODY_RADIUS, WORLD_WIDTH - BODY_RADIUS);
+        rivalMower.y = clamp(Number(rivalPosition.y), BODY_RADIUS, WORLD_HEIGHT - BODY_RADIUS);
+        return snapshot();
+      }
+
+      function spawnFromCanvasEvent(event) {
+        if (phase !== "spawn-select") return;
+        const bounds = canvas.getBoundingClientRect();
+        const canvasY = (event.clientY - bounds.top) * viewportHeight / bounds.height;
+        setSpawnRatio((canvasY - layout.arena.y) / layout.arena.height);
+      }
+
+      function animationFrame(now) {
+        const delta = Math.min(250, Math.max(0, now - lastFrameTime));
+        lastFrameTime = now;
+        advanceFrame(delta);
+        window.requestAnimationFrame(animationFrame);
       }
 
       pad.addEventListener("pointerdown", (event) => {
@@ -1986,10 +2308,8 @@
         startButton.disabled = true;
         drawBladeOnPad();
       });
-
       pad.addEventListener("pointermove", (event) => {
         if (!drawing || event.pointerId !== drawingPointer) return;
-        event.preventDefault();
         const point = padPoint(event);
         const previous = bladePoints[bladePoints.length - 1];
         if (!previous || Math.hypot(point.x - previous.x, point.y - previous.y) >= 3) {
@@ -1997,108 +2317,97 @@
           drawBladeOnPad();
         }
       });
-
       const finishDrawing = (event) => {
         if (!drawing || event.pointerId !== drawingPointer) return;
         drawing = false;
         drawingPointer = null;
         startButton.disabled = bladePoints.length < 3;
-        updateBladeStats();
+        updateBladeDisplay();
       };
-
       pad.addEventListener("pointerup", finishDrawing);
       pad.addEventListener("pointercancel", finishDrawing);
-      window.addEventListener("resize", resize, { passive: true });
-      document.addEventListener("visibilitychange", () => {
-        lastTime = performance.now();
-        simulationAccumulator = 0;
+
+      canvas.addEventListener("pointerdown", (event) => {
+        if (phase !== "spawn-select") return;
+        event.preventDefault();
+        dragSpawn = true;
+        canvas.setPointerCapture(event.pointerId);
+        spawnFromCanvasEvent(event);
+      });
+      canvas.addEventListener("pointermove", (event) => {
+        if (!dragSpawn || phase !== "spawn-select") return;
+        event.preventDefault();
+        spawnFromCanvasEvent(event);
+      });
+      const finishSpawnDrag = () => { dragSpawn = false; };
+      canvas.addEventListener("pointerup", finishSpawnDrag);
+      canvas.addEventListener("pointercancel", finishSpawnDrag);
+      spawnSlider.addEventListener("input", () => setSpawnRatio(Number(spawnSlider.value) / 100));
+      lockStartButton.addEventListener("click", confirmSpawn);
+
+      window.addEventListener("keydown", (event) => {
+        if (phase !== "spawn-select") return;
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          setSpawnRatio(spawnRatio - 0.02);
+        } else if (event.key === "ArrowDown") {
+          event.preventDefault();
+          setSpawnRatio(spawnRatio + 0.02);
+        } else if (event.key === "Enter") {
+          event.preventDefault();
+          confirmSpawn();
+        }
       });
 
-      const syncReducedMotion = (event) => {
-        reducedMotion = event.matches;
-        if (reducedMotion) particles = [];
-      };
-      if (typeof motionQuery.addEventListener === "function") {
-        motionQuery.addEventListener("change", syncReducedMotion);
-      } else if (typeof motionQuery.addListener === "function") {
-        motionQuery.addListener(syncReducedMotion);
-      }
-
-      startButton.addEventListener("click", startRace);
+      startButton.addEventListener("click", beginSpawn);
       clearButton.addEventListener("click", () => {
         bladePoints = [];
         startButton.disabled = true;
         drawBladeOnPad();
       });
       starterButton.addEventListener("click", useStarterBlade);
-      againButton.addEventListener("click", startRace);
+      againButton.addEventListener("click", beginSpawn);
       newBladeButton.addEventListener("click", showDesigner);
+      window.addEventListener("resize", resize, { passive: true });
+      document.addEventListener("visibilitychange", () => {
+        lastFrameTime = performance.now();
+        frameAccumulatorMs = 0;
+      });
+      const syncReducedMotion = (event) => {
+        reducedMotion = event.matches;
+        render();
+      };
+      if (typeof reducedMotionQuery.addEventListener === "function") {
+        reducedMotionQuery.addEventListener("change", syncReducedMotion);
+      } else if (typeof reducedMotionQuery.addListener === "function") {
+        reducedMotionQuery.addListener(syncReducedMotion);
+      }
 
-      if (URL_OPTIONS.get("test") === "1") {
+      if (TEST_MODE) {
         window.__grassCutterTest = Object.freeze({
           useStarterBlade,
-          setBladePreset(name) {
-            if (name === "strong") {
-              useStarterBlade();
-            } else if (name === "weak") {
-              bladePoints = [
-                { x: 240, y: 90 },
-                { x: 260, y: 40 },
-                { x: 245, y: 140 },
-                { x: 270, y: 50 },
-                { x: 280, y: 90 }
-              ];
-              startButton.disabled = false;
-              drawBladeOnPad();
-            } else {
-              throw new Error("Unknown blade preset");
-            }
-            return analyzeBlade(bladePoints);
-          },
-          startRace,
-          advanceTicks(count) {
-            const safeCount = clamp(Math.floor(Number(count) || 0), 0, TOTAL_RACE_TICKS);
-            for (let index = 0; index < safeCount && phase === "racing"; index += 1) {
-              updateRace(FIXED_STEP);
-            }
-            render();
-            return this.snapshot();
-          },
-          advanceFrame(milliseconds) {
-            const delta = clamp((Number(milliseconds) || 0) / 1000, 0, 0.1);
-            if (phase === "racing") advanceSimulation(delta);
-            render();
-            return this.snapshot();
-          },
-          snapshot() {
-            return {
-              mode: CLASSIC_MODE ? "classic" : "seeded-turf-drama",
-              raceSeed,
-              phase,
-              raceTick,
-              playerCutCount,
-              rivalCutCount,
-              playerScore,
-              rivalScore,
-              playerX,
-              rivalX,
-              playerRating: playerBladeStats.rating,
-              rivalRating: rivalBladeStats.rating,
-              playerEvent: playerEventState.event.id,
-              rivalEvent: rivalEventState.event.id,
-              leadChangeCount
-            };
-          }
+          setBladePreset,
+          startRace: beginSpawn,
+          beginSpawn,
+          setSpawnRatio,
+          confirmSpawn,
+          advanceTicks,
+          advanceFrame,
+          snapshot,
+          getOwners,
+          setRivalPreset: setTestRival,
+          setMowerPositions: setTestMowerPositions,
+          resolveClaimFixture: resolveClaimOwner
         });
       }
 
-      feedText.textContent = `🐾 ${feed}`;
-      playerCells = makeCells();
-      rivalCells = makeCells();
+      feedText.textContent = `FOOD ${feed}`;
       startButton.disabled = true;
+      if (CLASSIC_MODE) startButton.textContent = "Start Classic";
       drawBladeOnPad();
+      updateHud();
       resize();
-      requestAnimationFrame(animationLoop);
+      if (!MANUAL_MODE) window.requestAnimationFrame(animationFrame);
     })();
   </script>
 </body>
